@@ -8,22 +8,23 @@ AMIORA est un projet d'application mobile qui aide chacun à entretenir ses rela
 
 ## Documents de référence
 
-1. **[Décisions finales V1.1](docs/decisions-finales-v1.1.md)** — les décisions de pré-développement qui prévalent sur tout le reste : paiements, MVP re-découpé en trois lots, pondérations de l'Indice de présence, registre des notifications, checklist GO / NO GO.
-2. **[Spécification de référence V1.0](docs/specification-de-reference-v1.0.md)** — le document fondateur du produit : vision, MVP centré sur la saisie d'interaction, modèle économique, architecture. Amendé par les Décisions V1.1.
-3. **[État du GO / NO GO](docs/audit/15-revue-des-decisions-v1.1.md)** — évaluation des huit critères de la checklist (2 figés, 4 partiels, 2 non entamés) et la décision encore absente : le prix.
-4. **[Synthèse exécutive de l'audit](docs/audit/00-synthese-executive.md)** — verdict « fini / utilisable / vendable », cinq décisions, cinq risques majeurs et roadmap vers un lancement soft en Suisse romande.
+1. **[PRD Final V1.2](docs/prd-v1.2.md)** — ★ le document de référence actif, statut **GO DÉVELOPPEMENT** : geste central spécifié de bout en bout, modèle premium sans plan gratuit (essai 14 jours, 5,99 CHF/mois · 44,99 CHF/an), hors-ligne d'abord, 17 écrans, politique de notifications.
+2. **[Validation du GO](docs/audit/16-revue-du-prd-v1.2-validation-du-go.md)** — le GO confirmé comme GO de démarrage : 4 critères figés, 4 quasi, 4 réserves à lever en sprint 0 (dont la formule de l'Indice de présence) et l'analyse du pivot « premium sans gratuit ».
+3. **[Décisions finales V1.1](docs/decisions-finales-v1.1.md)** et **[Spécification V1.0](docs/specification-de-reference-v1.0.md)** — l'historique des décisions, consolidé par le PRD V1.2.
+4. **[Synthèse exécutive de l'audit](docs/audit/00-synthese-executive.md)** — le point de départ : verdict « fini / utilisable / vendable », cinq décisions, cinq risques majeurs, roadmap.
 
 ## Plan du dépôt
 
 ```
 docs/
-├── decisions-finales-v1.1.md              ★ Décisions de pré-développement (prévalent sur la V1.0)
-├── specification-de-reference-v1.0.md     Document fondateur (juillet 2026)
+├── prd-v1.2.md                            ★ PRD Final — document de référence actif (GO développement)
+├── decisions-finales-v1.1.md              Décisions de pré-développement (historique)
+├── specification-de-reference-v1.0.md     Document fondateur (historique)
 ├── spec/    Les sources historiques auditées (archivées)
 │   ├── prompt-1-audit-produit.md          Document source n° 1 (vision, MVP, business model)
 │   ├── prompt-2-specification-detaillee.md Document source n° 2 (spécification en 31 sections)
 │   └── maquettes-observations.md          Relevé factuel des 12 maquettes + incohérences repérées
-└── audit/   L'audit produit et ses revues (16 documents)
+└── audit/   L'audit produit et ses revues (17 documents)
     ├── 00-synthese-executive.md           Verdict global, décisions, risques, chemin recommandé
     ├── 01-vision-et-positionnement.md
     ├── 02-coherence-des-specifications.md  32 divergences tranchées entre les sources
@@ -39,7 +40,8 @@ docs/
     ├── 12-roadmap-vers-le-lancement.md
     ├── 13-kpi-et-mesure-du-succes.md
     ├── 14-revue-de-la-specification-v1.0.md  Revue de la V1.0 face à l'audit
-    └── 15-revue-des-decisions-v1.1.md        État du GO / NO GO après les décisions V1.1
+    ├── 15-revue-des-decisions-v1.1.md        État du GO / NO GO après les décisions V1.1
+    └── 16-revue-du-prd-v1.2-validation-du-go.md  Validation du GO développement
 ```
 
 ## Définition du succès
