@@ -929,8 +929,14 @@
 
   groupePastilles("pastillesDate", "data-date", function (valeur) {
     $("champDate").value = "";
-    if (valeur === "hier") { etat.libelleDate = "Hier"; }
-    else { etat.libelleDate = "Aujourd’hui"; }
+    if (valeur === "hier") {
+      etat.libelleDate = "Hier";
+    } else {
+      // Pas de date « vide » possible : retour à Aujourd’hui par défaut
+      etat.libelleDate = "Aujourd’hui";
+      $("pastillesDate").querySelector('[data-date="aujourdhui"]')
+        .setAttribute("aria-pressed", "true");
+    }
     valeurDate.textContent = etat.libelleDate;
   });
 
