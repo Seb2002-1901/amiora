@@ -424,6 +424,43 @@ Le réglage système (iOS Reduce Motion / Android « Supprimer les animations »
 
 ---
 
+## 9. Responsive — règles normatives multi-appareils
+
+L'application est conçue nativement pour l'ensemble du parc iOS et Android (et un support minimal tablette), pas pour un seul gabarit adapté après coup.
+
+### 9.1 Points de rupture (logique Material 3, en dp)
+
+| Classe | Largeur | Appareils types | Comportement |
+|---|---|---|---|
+| `compact` | < 600 dp | iPhone SE/mini (375), iPhone 15/16 (393), Galaxy S24/S25 (360-384), Pro Max/Ultra (430-412), Pixel Pro | Mise en page de référence : une colonne, barre d'onglets basse |
+| `medium` | 600-839 dp | Petites tablettes, téléphones pliés en paysage | Contenu centré à largeur max **600 dp**, gouttières élargies (24 → 32) |
+| `expanded` | ≥ 840 dp | iPad, tablettes Android | Contenu centré 600 dp en V1 ; `NavigationRail` à gauche remplace la barre d'onglets ; la structure deux volets (liste + détail) est préparée mais hors périmètre V1 |
+
+### 9.2 Règles absolues
+
+1. **Aucune taille fixe en pixels pour la mise en page** : dimensions issues des tokens d'espacement, `Expanded`/`Flexible`, contraintes (`LayoutBuilder`, `MediaQuery.sizeOf`) ; seuls icônes, rayons et hauteurs de composants du § 5 sont des constantes.
+2. **`SafeArea` obligatoire sur chaque écran** : Dynamic Island et encoche (haut), barre de gestes iOS et barre de navigation Android (bas). La barre d'onglets et les bottom sheets intègrent `viewPadding.bottom` ; le bouton central « + » reste au-dessus de la zone de gestes.
+3. **Aucun débordement toléré** : tout texte long est `ellipsis` ou multi-lignes prévu ; les rangées d'actions passent en `Wrap` sous 360 dp ; interdiction de `RenderFlex overflow` en CI (les tests widget s'exécutent sur les gabarits § 9.3).
+4. **Rien de collé aux bords** : gouttière horizontale minimale 16 dp en `compact`, 24 dp au-delà.
+5. **Grilles fluides** : vignettes de souvenirs et tuiles de statistiques calculées par `LayoutBuilder` (nombre de colonnes = largeur ÷ largeur cible ~110 dp, jamais un nombre codé en dur).
+6. **Typographie et zoom** : l'échelle du § 3 suit le facteur système jusqu'à 130 % minimum sans casser la mise en page (tests dédiés).
+7. **Cibles tactiles** : 44 × 44 pt minimum sur toutes les classes de taille, y compris à 130 % de zoom.
+
+### 9.3 Matrice de vérification obligatoire (maquettes ET tests widget)
+
+| Gabarit | Taille logique | Représente |
+|---|---|---|
+| Petit | 375 × 667 | iPhone SE, petits Android |
+| Standard iOS | 393 × 852 | iPhone 15/16 |
+| Standard Android | 360 × 780 | Galaxy S24/S25 |
+| Grand iOS | 430 × 932 | iPhone Pro Max |
+| Grand Android | 412 × 915 | Galaxy Ultra, Pixel Pro |
+| Tablette | 834 × 1194 | iPad, tablettes Android |
+
+Chaque écran doit être vérifié sur les six gabarits avant d'être déclaré terminé — aucun élément coupé, aucun débordement, aucun scroll cassé. Les aperçus multi-appareils sont maintenus dans `maquettes/03-apercus-responsive.html`.
+
+---
+
 ## Annexe — Récapitulatif des tokens non chromatiques
 
 | Famille | Tokens |
