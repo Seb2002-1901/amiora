@@ -136,4 +136,4 @@ Si la médiane T1 est ≥ 10 s : identifier le poste de temps dominant (recherch
 
 ---
 
-*Livrable 2 du Sprint 0 — répond à la réserve « geste central non prototypé » de la [validation du GO](../audit/16-revue-du-prd-v1.2-validation-du-go.md).*
+*Livrable 2 du Sprint 0 — répond à la réserve n° 8 de la [validation du GO](../audit/16-revue-du-prd-v1.2-validation-du-go.md) (« Ajouter une interaction » conçue mais non validée : prototype + 5-10 tests chronométrés, critère médiane < 10 secondes).*
