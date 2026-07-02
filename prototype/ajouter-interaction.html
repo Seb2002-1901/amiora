@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMIORA — Prototype « Ajouter une interaction »</title>
+<style>
+  /* ============================================================
+     AMIORA — Tokens officiels du design system
+     ============================================================ */
+  :root {
+    --fond: #0B0B0D;
+    --carte: #1A1A1E;
+    --sureleve: #232329;
+    --bordure: #2E2E33;
+    --or: #D9B45B;
+    --or-presse: #B8963F;
+    --texte-sur-or: #1A1405;
+    --texte-1: #F4F1E9;
+    --texte-2: #A9A6A0;
+    --succes: #8BC49A;
+    --erreur: #C96A5E;
+    --r-carte: 24px;
+    --r-bouton: 16px;
+    --r-champ: 12px;
+    --duree-anim: 200ms;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #1C1C20;
+    color: var(--texte-1);
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 40px 24px 64px;
+    background: radial-gradient(1200px 700px at 50% -10%, #26262C 0%, #1C1C20 60%);
+  }
+
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--or);
+    outline-offset: 2px;
+  }
+
+  /* ============================================================
+     Page hôte (hors du téléphone)
+     ============================================================ */
+  .entete-page { text-align: center; max-width: 720px; }
+  .entete-page h1 {
+    font-size: 20px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .entete-page h1 span { color: var(--or); }
+  .entete-page p {
+    margin-top: 8px; font-size: 14px; line-height: 1.55; color: var(--texte-2);
+  }
+
+  .scene {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 36px;
+  }
+
+  /* ============================================================
+     Cadre mobile 390 × 844
+     ============================================================ */
+  .telephone {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    flex-shrink: 0;
+    background: var(--fond);
+    border: 1px solid var(--bordure);
+    border-radius: 48px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  .barre-statut {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 30px 6px;
+    font-size: 14px; font-weight: 600; color: var(--texte-1);
+  }
+  .barre-statut .droite { display: flex; gap: 6px; font-size: 12px; color: var(--texte-2); }
+
+  .indicateur-accueil {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 5px; border-radius: 3px;
+    background: var(--bordure); z-index: 60; pointer-events: none;
+  }
+
+  /* ============================================================
+     Écran Accueil (simplifié)
+     ============================================================ */
+  .ecran-accueil {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+  }
+
+  .accueil-corps { flex: 1; padding: 10px 24px 0; overflow: hidden; }
+
+  .salutation { margin-top: 24px; }
+  .salutation h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+  .salutation p { margin-top: 6px; font-size: 15px; color: var(--texte-2); }
+
+  .carte-accueil {
+    margin-top: 20px;
+    background: var(--carte);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-carte);
+    padding: 20px;
+  }
+  .carte-accueil h3 {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--or); margin-bottom: 10px;
+  }
+  .carte-accueil p { font-size: 15px; line-height: 1.5; color: var(--texte-1); }
+  .carte-accueil p small { display: block; margin-top: 6px; font-size: 13px; color: var(--texte-2); }
+
+  /* Barre d’onglets */
+  .barre-onglets {
+    position: relative;
+    display: flex; align-items: flex-end; justify-content: space-around;
+    padding: 10px 12px 26px;
+    background: var(--carte);
+    border-top: 1px solid var(--bordure);
+  }
+  .onglet {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 58px; min-height: 44px; padding-top: 6px;
+    font-size: 10px; letter-spacing: 0.02em; color: var(--texte-2);
+  }
+  .onglet .picto { font-size: 20px; line-height: 1; filter: grayscale(1) brightness(1.2); }
+  .onglet.actif { color: var(--or); }
+  .onglet.actif .picto { filter: none; }
+
+  .bouton-plus {
+    width: 64px; height: 64px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: var(--or);
+    color: var(--texte-sur-or);
+    font-size: 30px; font-weight: 500; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(217, 180, 91, 0.35);
+    transition: transform 150ms ease, background var(--duree-anim) ease;
+  }
+  .bouton-plus:active { background: var(--or-presse); transform: scale(0.94); }
+
+  /* ============================================================
+     Feuille « Ajouter une interaction »
+     ============================================================ */
+  .voile {
+    position: absolute; inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--duree-anim) ease;
+    z-index: 20;
+  }
+  .voile.visible { opacity: 1; pointer-events: auto; }
+
+  .feuille {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 93%;
+    background: var(--carte);
+    border: 1px solid var(--bordure);
+    border-bottom: none;
+    border-radius: var(--r-carte) var(--r-carte) 0 0;
+    display: flex; flex-direction: column;
+    transform: translateY(103%);
+    transition: transform 240ms cubic-bezier(0.32, 0.72, 0.33, 1);
+    z-index: 30;
+  }
+  .feuille.ouverte { transform: translateY(0); }
+
+  .feuille-entete {
+    padding: 10px 20px 14px;
+    border-bottom: 1px solid var(--bordure);
+  }
+  .poignee {
+    width: 40px; height: 4px; border-radius: 2px;
+    background: var(--bordure); margin: 0 auto 12px;
+  }
+  .feuille-entete-ligne {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .feuille-entete h2 { font-size: 19px; font-weight: 700; }
+  .bouton-fermer {
+    width: 44px; height: 44px; margin-right: -10px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; color: var(--texte-2);
+    transition: background 150ms ease;
+  }
+  .bouton-fermer:active { background: var(--sureleve); }
+
+  .feuille-contenu {
+    flex: 1; overflow-y: auto;
+    padding: 20px 20px 8px;
+    scrollbar-width: thin; scrollbar-color: var(--bordure) transparent;
+  }
+
+  .etape { margin-bottom: 26px; }
+  .etape-titre {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px;
+  }
+  .etape-numero {
+    flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--sureleve); border: 1px solid var(--bordure);
+    color: var(--or); font-size: 12px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    transform: translateY(3px);
+  }
+  .etape-titre h3 { font-size: 16px; font-weight: 600; }
+  .etape-aide { font-size: 12.5px; color: var(--texte-2); margin: 0 0 14px 32px; }
+
+  /* Étape 1 — grille de personnes */
+  .grille-personnes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px 8px;
+  }
+  .personne {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    padding: 8px 2px 10px;
+    border-radius: var(--r-bouton);
+    transition: background 150ms ease;
+  }
+  .personne .avatar {
+    position: relative;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--sureleve);
+    border: 1px solid var(--bordure);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 700; letter-spacing: 0.03em;
+    color: var(--texte-1);
+    transition: box-shadow 150ms ease, background 150ms ease, border-color 150ms ease;
+  }
+  .personne .nom { font-size: 12.5px; font-weight: 600; color: var(--texte-1); }
+  .personne .categorie { font-size: 10.5px; color: var(--texte-2); margin-top: -3px; }
+  .personne .coche {
+    position: absolute; top: 2px; right: 50%; margin-right: -30px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--or); color: var(--texte-sur-or);
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.5);
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+  .personne[aria-pressed="true"] { background: rgba(217, 180, 91, 0.08); }
+  .personne[aria-pressed="true"] .avatar {
+    background: rgba(217, 180, 91, 0.16);
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--or);
+    color: var(--or);
+  }
+  .personne[aria-pressed="true"] .coche { opacity: 1; transform: scale(1); }
+
+  /* Étape 2 — grille de types */
+  .grille-types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .type {
+    position: relative;
+    display: flex; align-items: center; gap: 10px;
+    min-height: 52px;
+    padding: 10px 34px 10px 14px;
+    background: var(--sureleve);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-bouton);
+    font-size: 14px; font-weight: 500; color: var(--texte-1);
+    text-align: left;
+    transition: box-shadow 150ms ease, background 150ms ease, border-color 150ms ease;
+  }
+  .type .emoji { font-size: 20px; flex-shrink: 0; }
+  .type .coche {
+    position: absolute; top: 50%; right: 12px; transform: translateY(-50%) scale(0.5);
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--or); color: var(--texte-sur-or);
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+  .type[aria-pressed="true"] {
+    background: rgba(217, 180, 91, 0.13);
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--or);
+  }
+  .type[aria-pressed="true"] .coche { opacity: 1; transform: translateY(-50%) scale(1); }
+
+  /* Ligne date + détails */
+  .ligne-date {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; min-height: 52px;
+    padding: 12px 14px;
+    background: var(--sureleve);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-bouton);
+    margin-bottom: 12px;
+  }
+  .ligne-date .libelle { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
+  .ligne-date .valeur { font-weight: 600; color: var(--or); }
+  .ligne-date .modifier { font-size: 13px; color: var(--texte-2); }
+
+  .details-bascule {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; min-height: 52px;
+    padding: 12px 14px;
+    border: 1px dashed var(--bordure);
+    border-radius: var(--r-bouton);
+    color: var(--texte-2); font-size: 14.5px;
+  }
+  .details-bascule .chevron {
+    transition: transform var(--duree-anim) ease;
+    font-size: 12px;
+  }
+  .details-bascule[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+  .details {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 250ms ease;
+  }
+  .details.ouvert { grid-template-rows: 1fr; }
+  .details-interieur { overflow: hidden; }
+  .details-bloc { padding-top: 18px; }
+  .details-bloc:last-child { padding-bottom: 8px; }
+  .details-bloc label, .details-bloc .titre-champ {
+    display: block;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--texte-2);
+    margin-bottom: 8px;
+  }
+
+  .pastilles { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pastille {
+    min-height: 44px;
+    padding: 10px 16px;
+    background: var(--sureleve);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-champ);
+    font-size: 13.5px; color: var(--texte-1);
+    transition: box-shadow 150ms ease, background 150ms ease, border-color 150ms ease;
+  }
+  .pastille[aria-pressed="true"] {
+    background: rgba(217, 180, 91, 0.13);
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--or);
+    font-weight: 600;
+  }
+  .pastille[aria-pressed="true"]::before { content: "✓ "; color: var(--or); }
+
+  .champ-texte, .champ-date {
+    width: 100%; min-height: 46px;
+    padding: 12px 14px;
+    background: var(--fond);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-champ);
+    color: var(--texte-1);
+    font: inherit; font-size: 14.5px;
+    color-scheme: dark;
+  }
+  .champ-texte::placeholder { color: var(--texte-2); opacity: 0.7; }
+  textarea.champ-texte { resize: none; min-height: 72px; }
+  .champ-date { margin-top: 10px; }
+
+  .bouton-photo {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; min-height: 50px;
+    padding: 12px 14px;
+    border: 1px dashed var(--bordure);
+    border-radius: var(--r-champ);
+    color: var(--texte-2); font-size: 14px;
+  }
+  .bouton-photo.ajoutee { color: var(--succes); border-color: var(--succes); border-style: solid; }
+
+  /* Pied de la feuille — bouton Enregistrer */
+  .feuille-pied {
+    padding: 14px 20px 30px;
+    border-top: 1px solid var(--bordure);
+    background: var(--carte);
+  }
+  .bouton-enregistrer {
+    width: 100%; min-height: 56px;
+    border-radius: var(--r-bouton);
+    background: var(--sureleve);
+    color: var(--texte-2);
+    font-size: 16px; font-weight: 700; letter-spacing: 0.01em;
+    transition: background var(--duree-anim) ease, color var(--duree-anim) ease, transform 150ms ease;
+  }
+  .bouton-enregistrer:disabled { cursor: not-allowed; }
+  .bouton-enregistrer.pret {
+    background: var(--or);
+    color: var(--texte-sur-or);
+    box-shadow: 0 6px 20px rgba(217, 180, 91, 0.28);
+  }
+  .bouton-enregistrer.pret:active { background: var(--or-presse); transform: scale(0.985); }
+
+  /* ============================================================
+     Écran de confirmation
+     ============================================================ */
+  .ecran-confirmation {
+    position: absolute; inset: 0;
+    background: var(--fond);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px 32px 60px;
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--duree-anim) ease;
+    z-index: 40;
+  }
+  .ecran-confirmation.visible { opacity: 1; pointer-events: auto; }
+  .ecran-confirmation.visible .confirmation-coeur { animation: apparition 250ms ease both; }
+
+  @keyframes apparition {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .cercle-succes {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: rgba(139, 196, 154, 0.12);
+    border: 1px solid rgba(139, 196, 154, 0.4);
+    color: var(--succes);
+    font-size: 32px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 26px;
+  }
+  .confirmation-titre { font-size: 26px; font-weight: 700; }
+  .confirmation-message {
+    margin-top: 10px;
+    font-size: 17px; line-height: 1.5; color: var(--texte-2);
+    max-width: 290px; margin-left: auto; margin-right: auto;
+  }
+  .confirmation-recap {
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    background: var(--carte); border: 1px solid var(--bordure);
+    border-radius: 999px;
+    font-size: 13px; color: var(--texte-2);
+  }
+
+  .chrono {
+    margin-top: 36px;
+    font-size: 64px; font-weight: 800; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .chrono small { font-size: 26px; font-weight: 600; color: var(--texte-2); margin-left: 4px; }
+  .chrono.vert { color: var(--succes); }
+
+  .badge-objectif {
+    margin-top: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13.5px; font-weight: 600;
+  }
+  .badge-objectif .point { width: 8px; height: 8px; border-radius: 50%; }
+  .badge-objectif.atteint {
+    background: rgba(139, 196, 154, 0.12);
+    border: 1px solid rgba(139, 196, 154, 0.4);
+    color: var(--succes);
+  }
+  .badge-objectif.atteint .point { background: var(--succes); }
+  .badge-objectif.manque {
+    background: rgba(201, 106, 94, 0.10);
+    border: 1px solid rgba(201, 106, 94, 0.35);
+    color: var(--erreur);
+  }
+  .badge-objectif.manque .point { background: var(--erreur); }
+
+  .bouton-recommencer {
+    margin-top: 44px;
+    min-height: 54px; min-width: 220px;
+    padding: 0 32px;
+    border-radius: var(--r-bouton);
+    background: var(--or);
+    color: var(--texte-sur-or);
+    font-size: 16px; font-weight: 700;
+    transition: background var(--duree-anim) ease, transform 150ms ease;
+  }
+  .bouton-recommencer:active { background: var(--or-presse); transform: scale(0.97); }
+
+  /* ============================================================
+     Panneau Résultats (hors du téléphone)
+     ============================================================ */
+  .panneau-resultats {
+    width: 320px;
+    background: var(--carte);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-carte);
+    padding: 24px;
+  }
+  .panneau-resultats h2 {
+    font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .panneau-resultats .sous-titre {
+    margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--texte-2);
+  }
+
+  .mediane {
+    margin-top: 20px;
+    background: var(--sureleve);
+    border: 1px solid var(--bordure);
+    border-radius: var(--r-bouton);
+    padding: 16px 18px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .mediane .etiquette { font-size: 13px; color: var(--texte-2); }
+  .mediane .valeur {
+    font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums;
+  }
+  .mediane .valeur.vert { color: var(--succes); }
+  .mediane .valeur.rouge { color: var(--erreur); }
+
+  .liste-essais { margin-top: 16px; list-style: none; max-height: 300px; overflow-y: auto; }
+  .liste-essais li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--bordure);
+    font-size: 14px;
+  }
+  .liste-essais li:last-child { border-bottom: none; }
+  .liste-essais .point {
+    flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--texte-2);
+  }
+  .liste-essais .point.vert { background: var(--succes); }
+  .liste-essais .point.rouge { background: var(--erreur); }
+  .liste-essais .temps { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 52px; }
+  .liste-essais .contexte {
+    color: var(--texte-2); font-size: 12.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .liste-vide { padding: 18px 4px; font-size: 13.5px; color: var(--texte-2); font-style: italic; }
+
+  .panneau-actions { margin-top: 18px; display: flex; gap: 10px; }
+  .bouton-secondaire {
+    flex: 1; min-height: 46px;
+    border-radius: var(--r-bouton);
+    border: 1px solid var(--bordure);
+    background: var(--sureleve);
+    color: var(--texte-1);
+    font-size: 14px; font-weight: 600;
+    transition: background 150ms ease;
+  }
+  .bouton-secondaire:active { background: var(--bordure); }
+  .bouton-secondaire.discret { flex: 0 0 auto; padding: 0 14px; color: var(--texte-2); }
+
+  @media (max-width: 820px) {
+    body { padding: 24px 12px 48px; }
+    .panneau-resultats { width: 390px; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="entete-page">
+    <h1><span>AMIORA</span> · Sprint 0 — Prototype du geste central</h1>
+    <p>« Ajouter une interaction » — objectif : temps médian de complétion inférieur à 10 secondes.<br>
+       Le chronomètre démarre au tap sur le bouton <strong>+</strong> et s’arrête au tap sur <strong>Enregistrer</strong>.</p>
+  </header>
+
+  <div class="scene">
+
+    <!-- ================= Cadre mobile ================= -->
+    <div class="telephone" aria-label="Simulation mobile AMIORA">
+
+      <!-- Écran Accueil -->
+      <div class="ecran-accueil" id="ecranAccueil">
+        <div class="barre-statut">
+          <span>9:41</span>
+          <span class="droite"><span>●●●</span><span>LTE</span><span>▮▮▮</span></span>
+        </div>
+        <div class="accueil-corps">
+          <div class="salutation">
+            <h2>Bonjour Sébastien</h2>
+            <p>Mercredi 2 juillet</p>
+          </div>
+          <div class="carte-accueil">
+            <h3>Aujourd’hui</h3>
+            <p>L’anniversaire de Julie approche 🎂
+              <small>Dans 3 jours — une petite attention pourrait lui faire plaisir.</small>
+            </p>
+          </div>
+          <div class="carte-accueil">
+            <h3>Souvenir du jour</h3>
+            <p>Il y a exactement trois ans, vous étiez à Rome avec Emma.
+              <small>Voyage · Juillet 2023</small>
+            </p>
+          </div>
+        </div>
+        <nav class="barre-onglets" aria-label="Navigation principale">
+          <button class="onglet actif"><span class="picto">🏠</span>Accueil</button>
+          <button class="onglet"><span class="picto">👥</span>Relations</button>
+          <button class="bouton-plus" id="boutonPlus" aria-label="Ajouter une interaction">+</button>
+          <button class="onglet"><span class="picto">📔</span>Souvenirs</button>
+          <button class="onglet"><span class="picto">👤</span>Profil</button>
+        </nav>
+      </div>
+
+      <!-- Voile derrière la feuille -->
+      <div class="voile" id="voile"></div>
+
+      <!-- Feuille « Ajouter une interaction » -->
+      <section class="feuille" id="feuille" role="dialog" aria-modal="true" aria-labelledby="titreFeuille">
+        <div class="feuille-entete">
+          <div class="poignee"></div>
+          <div class="feuille-entete-ligne">
+            <h2 id="titreFeuille">Ajouter une interaction</h2>
+            <button class="bouton-fermer" id="boutonFermer" aria-label="Fermer sans enregistrer">✕</button>
+          </div>
+        </div>
+
+        <div class="feuille-contenu" id="feuilleContenu">
+
+          <!-- Étape 1 — personne(s) -->
+          <div class="etape">
+            <div class="etape-titre">
+              <span class="etape-numero">1</span>
+              <h3>Avec qui ?</h3>
+            </div>
+            <p class="etape-aide">Obligatoire · plusieurs personnes possibles</p>
+            <div class="grille-personnes" id="grillePersonnes"></div>
+          </div>
+
+          <!-- Étape 2 — type -->
+          <div class="etape">
+            <div class="etape-titre">
+              <span class="etape-numero">2</span>
+              <h3>Quel moment ?</h3>
+            </div>
+            <p class="etape-aide">Obligatoire · un seul type</p>
+            <div class="grille-types" id="grilleTypes"></div>
+          </div>
+
+          <!-- Date pré-remplie -->
+          <button class="ligne-date" id="ligneDate" aria-label="Date de l’interaction, modifiable dans les détails">
+            <span class="libelle">📅 Date&nbsp;: <span class="valeur" id="valeurDate">Aujourd’hui</span></span>
+            <span class="modifier">Modifier ›</span>
+          </button>
+
+          <!-- Section repliée « Ajouter des détails » -->
+          <button class="details-bascule" id="detailsBascule" aria-expanded="false" aria-controls="details">
+            <span>Ajouter des détails <em style="font-style:normal; opacity:0.7;">(facultatif)</em></span>
+            <span class="chevron">▼</span>
+          </button>
+
+          <div class="details" id="details">
+            <div class="details-interieur">
+
+              <div class="details-bloc">
+                <span class="titre-champ">Date</span>
+                <div class="pastilles" id="pastillesDate">
+                  <button class="pastille" data-date="aujourdhui" aria-pressed="true">Aujourd’hui</button>
+                  <button class="pastille" data-date="hier" aria-pressed="false">Hier</button>
+                </div>
+                <input type="date" class="champ-date" id="champDate" aria-label="Choisir une autre date">
+              </div>
+
+              <div class="details-bloc">
+                <span class="titre-champ">Durée</span>
+                <div class="pastilles" id="pastillesDuree">
+                  <button class="pastille" data-duree="15 min" aria-pressed="false">15 min</button>
+                  <button class="pastille" data-duree="30 min" aria-pressed="false">30 min</button>
+                  <button class="pastille" data-duree="1 h" aria-pressed="false">1 h</button>
+                  <button class="pastille" data-duree="2 h" aria-pressed="false">2 h</button>
+                  <button class="pastille" data-duree="Demi-journée" aria-pressed="false">Demi-journée</button>
+                </div>
+              </div>
+
+              <div class="details-bloc">
+                <span class="titre-champ">Qualité du moment</span>
+                <div class="pastilles" id="pastillesQualite">
+                  <button class="pastille" data-qualite="Difficile" aria-pressed="false">Difficile</button>
+                  <button class="pastille" data-qualite="Correct" aria-pressed="false">Correct</button>
+                  <button class="pastille" data-qualite="Bien" aria-pressed="false">Bien</button>
+                  <button class="pastille" data-qualite="Excellent" aria-pressed="false">Excellent</button>
+                </div>
+              </div>
+
+              <div class="details-bloc">
+                <label for="champLieu">Lieu</label>
+                <input type="text" class="champ-texte" id="champLieu" placeholder="Ex. : chez Papa, Café du Lac…">
+              </div>
+
+              <div class="details-bloc">
+                <label for="champNote">Note</label>
+                <textarea class="champ-texte" id="champNote" placeholder="Un détail à retenir de ce moment…"></textarea>
+              </div>
+
+              <div class="details-bloc">
+                <span class="titre-champ">Photo</span>
+                <button class="bouton-photo" id="boutonPhoto">📷 <span id="libellePhoto">Ajouter une photo</span></button>
+              </div>
+
+            </div>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </div>
+
+        <div class="feuille-pied">
+          <button class="bouton-enregistrer" id="boutonEnregistrer" disabled>
+            Choisissez une personne et un type
+          </button>
+        </div>
+      </section>
+
+      <!-- Écran de confirmation -->
+      <section class="ecran-confirmation" id="ecranConfirmation" aria-live="polite">
+        <div class="confirmation-coeur">
+          <div class="cercle-succes">✓</div>
+          <h2 class="confirmation-titre">Enregistré.</h2>
+          <p class="confirmation-message" id="messageConfirmation">Encore un moment avec Papa 💛</p>
+          <span class="confirmation-recap" id="recapConfirmation"></span>
+          <div class="chrono" id="affichageChrono">0,0<small>s</small></div>
+          <div class="badge-objectif atteint" id="badgeObjectif">
+            <span class="point"></span><span id="texteObjectif">Objectif atteint — moins de 10 s</span>
+          </div>
+          <div>
+            <button class="bouton-recommencer" id="boutonRecommencerConfirmation">Recommencer</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="indicateur-accueil"></div>
+    </div>
+
+    <!-- ================= Panneau Résultats ================= -->
+    <aside class="panneau-resultats" aria-label="Résultats des essais chronométrés">
+      <h2>Résultats</h2>
+      <p class="sous-titre">Chaque essai mesure le temps entre le tap sur « + » et le tap sur « Enregistrer ». Critère de validation : médiane &lt; 10 s.</p>
+
+      <div class="mediane">
+        <span class="etiquette">Médiane<br><span id="compteEssais">0 essai</span></span>
+        <span class="valeur" id="valeurMediane">—</span>
+      </div>
+
+      <ul class="liste-essais" id="listeEssais">
+        <li class="liste-vide">Aucun essai pour l’instant. Tapez sur « + » dans le téléphone pour commencer.</li>
+      </ul>
+
+      <div class="panneau-actions">
+        <button class="bouton-secondaire" id="boutonRecommencerPanneau">Recommencer</button>
+        <button class="bouton-secondaire discret" id="boutonEffacer">Effacer</button>
+      </div>
+    </aside>
+
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Données de démonstration ---------- */
+  var PERSONNES = [
+    { nom: "Emma",        categorie: "Partenaire", initiales: "EM" },
+    { nom: "Papa",        categorie: "Famille",    initiales: "PA" },
+    { nom: "Maman",       categorie: "Famille",    initiales: "MA" },
+    { nom: "Thomas",      categorie: "Ami",        initiales: "TH" },
+    { nom: "Grand-maman", categorie: "Famille",    initiales: "GM" },
+    { nom: "Julie",       categorie: "Amie",       initiales: "JU" },
+    { nom: "Léa",         categorie: "Enfant",     initiales: "LÉ" },
+    { nom: "Marc",        categorie: "Mentor",     initiales: "MC" }
+  ];
+
+  var TYPES = [
+    { nom: "Appel",           emoji: "📞" },
+    { nom: "Message",         emoji: "💬" },
+    { nom: "Repas",           emoji: "🍽️" },
+    { nom: "Sortie",          emoji: "🌆" },
+    { nom: "Voyage",          emoji: "✈️" },
+    { nom: "Visite",          emoji: "🏠" },
+    { nom: "Cadeau",          emoji: "🎁" },
+    { nom: "Moment ensemble", emoji: "✨" },
+    { nom: "Photo souvenir",  emoji: "📷" },
+    { nom: "Événement",       emoji: "⭐" }
+  ];
+
+  /* ---------- État en mémoire (aucun stockage) ---------- */
+  var etat = {
+    personnes: [],          // noms sélectionnés (multi-sélection)
+    type: null,             // type sélectionné
+    libelleDate: "Aujourd’hui",
+    duree: null,
+    qualite: null,
+    photo: false,
+    debutChrono: null,      // performance.now() au tap sur +
+    essais: []              // { temps, personnes, type }
+  };
+
+  /* ---------- Raccourcis DOM ---------- */
+  function $(id) { return document.getElementById(id); }
+  var feuille = $("feuille"), voile = $("voile"),
+      ecranConfirmation = $("ecranConfirmation"),
+      boutonEnregistrer = $("boutonEnregistrer"),
+      valeurDate = $("valeurDate");
+
+  function formatSecondes(s) {
+    return s.toFixed(1).replace(".", ",");
+  }
+
+  /* ---------- Construction des grilles ---------- */
+  var grillePersonnes = $("grillePersonnes");
+  PERSONNES.forEach(function (p) {
+    var bouton = document.createElement("button");
+    bouton.className = "personne";
+    bouton.setAttribute("aria-pressed", "false");
+    bouton.setAttribute("aria-label", p.nom + ", " + p.categorie);
+    bouton.innerHTML =
+      '<span class="avatar">' + p.initiales + '<span class="coche">✓</span></span>' +
+      '<span class="nom">' + p.nom + '</span>' +
+      '<span class="categorie">' + p.categorie + '</span>';
+    bouton.addEventListener("click", function () {
+      var index = etat.personnes.indexOf(p.nom);
+      if (index === -1) { etat.personnes.push(p.nom); }
+      else { etat.personnes.splice(index, 1); }
+      bouton.setAttribute("aria-pressed", index === -1 ? "true" : "false");
+      actualiserEnregistrer();
+    });
+    grillePersonnes.appendChild(bouton);
+  });
+
+  var grilleTypes = $("grilleTypes");
+  TYPES.forEach(function (t) {
+    var bouton = document.createElement("button");
+    bouton.className = "type";
+    bouton.setAttribute("aria-pressed", "false");
+    bouton.innerHTML =
+      '<span class="emoji" aria-hidden="true">' + t.emoji + '</span>' +
+      '<span>' + t.nom + '</span>' +
+      '<span class="coche">✓</span>';
+    bouton.addEventListener("click", function () {
+      var dejaChoisi = bouton.getAttribute("aria-pressed") === "true";
+      grilleTypes.querySelectorAll(".type").forEach(function (b) {
+        b.setAttribute("aria-pressed", "false");
+      });
+      if (dejaChoisi) {
+        etat.type = null;
+      } else {
+        etat.type = t.nom;
+        bouton.setAttribute("aria-pressed", "true");
+      }
+      actualiserEnregistrer();
+    });
+    grilleTypes.appendChild(bouton);
+  });
+
+  /* ---------- Activation du bouton Enregistrer ---------- */
+  function actualiserEnregistrer() {
+    var pret = etat.personnes.length > 0 && etat.type !== null;
+    boutonEnregistrer.disabled = !pret;
+    boutonEnregistrer.classList.toggle("pret", pret);
+    boutonEnregistrer.textContent = pret
+      ? "Enregistrer"
+      : "Choisissez une personne et un type";
+  }
+
+  /* ---------- Ouverture / fermeture de la feuille ---------- */
+  function ouvrirFeuille() {
+    etat.debutChrono = performance.now(); // le chronomètre démarre ici
+    reinitialiserFormulaire();
+    voile.classList.add("visible");
+    feuille.classList.add("ouverte");
+  }
+
+  function fermerFeuille() { // fermeture sans enregistrer : essai annulé
+    etat.debutChrono = null;
+    voile.classList.remove("visible");
+    feuille.classList.remove("ouverte");
+  }
+
+  $("boutonPlus").addEventListener("click", ouvrirFeuille);
+  $("boutonFermer").addEventListener("click", fermerFeuille);
+  voile.addEventListener("click", fermerFeuille);
+
+  /* ---------- Section « Ajouter des détails » ---------- */
+  var details = $("details"), detailsBascule = $("detailsBascule");
+  function basculerDetails(forcerOuverture) {
+    var ouvrir = forcerOuverture === true ? true : !details.classList.contains("ouvert");
+    details.classList.toggle("ouvert", ouvrir);
+    detailsBascule.setAttribute("aria-expanded", ouvrir ? "true" : "false");
+  }
+  detailsBascule.addEventListener("click", function () { basculerDetails(); });
+
+  $("ligneDate").addEventListener("click", function () {
+    basculerDetails(true);
+    setTimeout(function () {
+      $("pastillesDate").scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 260);
+  });
+
+  /* ---------- Champs facultatifs ---------- */
+  function groupePastilles(idGroupe, attribut, apresChoix) {
+    var groupe = $(idGroupe);
+    groupe.querySelectorAll(".pastille").forEach(function (bouton) {
+      bouton.addEventListener("click", function () {
+        var dejaChoisi = bouton.getAttribute("aria-pressed") === "true";
+        groupe.querySelectorAll(".pastille").forEach(function (b) {
+          b.setAttribute("aria-pressed", "false");
+        });
+        var valeur = null;
+        if (!dejaChoisi) {
+          bouton.setAttribute("aria-pressed", "true");
+          valeur = bouton.getAttribute(attribut);
+        }
+        apresChoix(valeur, bouton);
+      });
+    });
+  }
+
+  groupePastilles("pastillesDate", "data-date", function (valeur) {
+    $("champDate").value = "";
+    if (valeur === "hier") { etat.libelleDate = "Hier"; }
+    else { etat.libelleDate = "Aujourd’hui"; }
+    valeurDate.textContent = etat.libelleDate;
+  });
+
+  $("champDate").addEventListener("change", function () {
+    if (!this.value) { return; }
+    var d = new Date(this.value + "T12:00:00");
+    etat.libelleDate = d.toLocaleDateString("fr-CH", { day: "numeric", month: "long" });
+    valeurDate.textContent = etat.libelleDate;
+    $("pastillesDate").querySelectorAll(".pastille").forEach(function (b) {
+      b.setAttribute("aria-pressed", "false");
+    });
+  });
+
+  groupePastilles("pastillesDuree", "data-duree", function (valeur) { etat.duree = valeur; });
+  groupePastilles("pastillesQualite", "data-qualite", function (valeur) { etat.qualite = valeur; });
+
+  $("boutonPhoto").addEventListener("click", function () { // bouton factice
+    etat.photo = !etat.photo;
+    this.classList.toggle("ajoutee", etat.photo);
+    $("libellePhoto").textContent = etat.photo ? "Photo ajoutée (factice)" : "Ajouter une photo";
+  });
+
+  /* ---------- Enregistrer : arrêt du chronomètre ---------- */
+  boutonEnregistrer.addEventListener("click", function () {
+    if (boutonEnregistrer.disabled || etat.debutChrono === null) { return; }
+    var temps = (performance.now() - etat.debutChrono) / 1000;
+    etat.debutChrono = null;
+
+    etat.essais.push({
+      temps: temps,
+      personnes: etat.personnes.slice(),
+      type: etat.type
+    });
+
+    afficherConfirmation(temps);
+    actualiserPanneauResultats();
+  });
+
+  /* ---------- Écran de confirmation ---------- */
+  function listeNoms(noms) {
+    if (noms.length === 1) { return noms[0]; }
+    return noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1];
+  }
+
+  function afficherConfirmation(temps) {
+    var noms = listeNoms(etat.personnes);
+    var pluriel = etat.personnes.length > 1;
+    $("messageConfirmation").textContent =
+      "Encore un moment avec " + noms + " 💛";
+    $("recapConfirmation").textContent =
+      etat.type + " · " + etat.libelleDate + (pluriel ? " · " + etat.personnes.length + " personnes" : "");
+
+    var chrono = $("affichageChrono");
+    chrono.innerHTML = formatSecondes(temps) + "<small>s</small>";
+    var objectifAtteint = temps < 10;
+    chrono.classList.toggle("vert", objectifAtteint);
+
+    var badge = $("badgeObjectif");
+    badge.className = "badge-objectif " + (objectifAtteint ? "atteint" : "manque");
+    $("texteObjectif").textContent = objectifAtteint
+      ? "Objectif atteint — moins de 10 s"
+      : "Au-dessus de l’objectif de 10 s";
+
+    voile.classList.remove("visible");
+    feuille.classList.remove("ouverte");
+    ecranConfirmation.classList.add("visible");
+  }
+
+  /* ---------- Réinitialisation ---------- */
+  function reinitialiserFormulaire() {
+    etat.personnes = [];
+    etat.type = null;
+    etat.libelleDate = "Aujourd’hui";
+    etat.duree = null;
+    etat.qualite = null;
+    etat.photo = false;
+
+    grillePersonnes.querySelectorAll(".personne").forEach(function (b) {
+      b.setAttribute("aria-pressed", "false");
+    });
+    grilleTypes.querySelectorAll(".type").forEach(function (b) {
+      b.setAttribute("aria-pressed", "false");
+    });
+    ["pastillesDuree", "pastillesQualite"].forEach(function (id) {
+      $(id).querySelectorAll(".pastille").forEach(function (b) {
+        b.setAttribute("aria-pressed", "false");
+      });
+    });
+    $("pastillesDate").querySelectorAll(".pastille").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-date") === "aujourdhui" ? "true" : "false");
+    });
+    $("champDate").value = "";
+    $("champLieu").value = "";
+    $("champNote").value = "";
+    $("boutonPhoto").classList.remove("ajoutee");
+    $("libellePhoto").textContent = "Ajouter une photo";
+    valeurDate.textContent = "Aujourd’hui";
+
+    details.classList.remove("ouvert");
+    detailsBascule.setAttribute("aria-expanded", "false");
+    $("feuilleContenu").scrollTop = 0;
+
+    actualiserEnregistrer();
+  }
+
+  function retourAccueil() {
+    ecranConfirmation.classList.remove("visible");
+    fermerFeuille();
+  }
+
+  $("boutonRecommencerConfirmation").addEventListener("click", retourAccueil);
+  $("boutonRecommencerPanneau").addEventListener("click", retourAccueil);
+
+  /* ---------- Panneau Résultats ---------- */
+  function mediane(valeurs) {
+    var triees = valeurs.slice().sort(function (a, b) { return a - b; });
+    var milieu = Math.floor(triees.length / 2);
+    return triees.length % 2 !== 0
+      ? triees[milieu]
+      : (triees[milieu - 1] + triees[milieu]) / 2;
+  }
+
+  function actualiserPanneauResultats() {
+    var liste = $("listeEssais");
+    liste.innerHTML = "";
+
+    if (etat.essais.length === 0) {
+      liste.innerHTML = '<li class="liste-vide">Aucun essai pour l’instant. Tapez sur « + » dans le téléphone pour commencer.</li>';
+      $("valeurMediane").textContent = "—";
+      $("valeurMediane").className = "valeur";
+      $("compteEssais").textContent = "0 essai";
+      return;
+    }
+
+    etat.essais.forEach(function (essai, index) {
+      var li = document.createElement("li");
+      var atteint = essai.temps < 10;
+      li.innerHTML =
+        '<span class="point ' + (atteint ? "vert" : "rouge") + '"></span>' +
+        '<span class="temps">' + formatSecondes(essai.temps) + '&nbsp;s</span>' +
+        '<span class="contexte">Essai ' + (index + 1) + " · " + essai.type +
+        " avec " + listeNoms(essai.personnes) + '</span>';
+      liste.appendChild(li);
+    });
+
+    var m = mediane(etat.essais.map(function (e) { return e.temps; }));
+    var valeur = $("valeurMediane");
+    valeur.textContent = formatSecondes(m) + " s";
+    valeur.className = "valeur " + (m < 10 ? "vert" : "rouge");
+    $("compteEssais").textContent = etat.essais.length +
+      (etat.essais.length > 1 ? " essais" : " essai");
+  }
+
+  $("boutonEffacer").addEventListener("click", function () {
+    etat.essais = [];
+    actualiserPanneauResultats();
+  });
+
+  actualiserEnregistrer();
+})();
+</script>
+
+</body>
+</html>
