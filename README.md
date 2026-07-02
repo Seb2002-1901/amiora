@@ -8,20 +8,22 @@ AMIORA est un projet d'application mobile qui aide chacun à entretenir ses rela
 
 ## Documents de référence
 
-1. **[Spécification de référence V1.0](docs/specification-de-reference-v1.0.md)** — le document fondateur officiel du produit : vision, MVP centré sur la saisie d'interaction, Indice de présence, modèle économique, architecture. Il prévaut sur toutes les sources antérieures.
-2. **[Revue de la V1.0](docs/audit/14-revue-de-la-specification-v1.0.md)** — ce que la V1.0 résout par rapport à l'audit, les points de vigilance qu'elle introduit (dont un bloquant : les moyens de paiement) et ce qui reste à spécifier avant développement.
-3. **[Synthèse exécutive de l'audit](docs/audit/00-synthese-executive.md)** — verdict « fini / utilisable / vendable », cinq décisions, cinq risques majeurs et roadmap vers un lancement soft en Suisse romande.
+1. **[Décisions finales V1.1](docs/decisions-finales-v1.1.md)** — les décisions de pré-développement qui prévalent sur tout le reste : paiements, MVP re-découpé en trois lots, pondérations de l'Indice de présence, registre des notifications, checklist GO / NO GO.
+2. **[Spécification de référence V1.0](docs/specification-de-reference-v1.0.md)** — le document fondateur du produit : vision, MVP centré sur la saisie d'interaction, modèle économique, architecture. Amendé par les Décisions V1.1.
+3. **[État du GO / NO GO](docs/audit/15-revue-des-decisions-v1.1.md)** — évaluation des huit critères de la checklist (2 figés, 4 partiels, 2 non entamés) et la décision encore absente : le prix.
+4. **[Synthèse exécutive de l'audit](docs/audit/00-synthese-executive.md)** — verdict « fini / utilisable / vendable », cinq décisions, cinq risques majeurs et roadmap vers un lancement soft en Suisse romande.
 
 ## Plan du dépôt
 
 ```
 docs/
-├── specification-de-reference-v1.0.md     ★ Document fondateur officiel (juillet 2026)
-├── spec/    Les sources historiques auditées (archivées, la V1.0 prévaut)
+├── decisions-finales-v1.1.md              ★ Décisions de pré-développement (prévalent sur la V1.0)
+├── specification-de-reference-v1.0.md     Document fondateur (juillet 2026)
+├── spec/    Les sources historiques auditées (archivées)
 │   ├── prompt-1-audit-produit.md          Document source n° 1 (vision, MVP, business model)
 │   ├── prompt-2-specification-detaillee.md Document source n° 2 (spécification en 31 sections)
 │   └── maquettes-observations.md          Relevé factuel des 12 maquettes + incohérences repérées
-└── audit/   L'audit produit (15 documents)
+└── audit/   L'audit produit et ses revues (16 documents)
     ├── 00-synthese-executive.md           Verdict global, décisions, risques, chemin recommandé
     ├── 01-vision-et-positionnement.md
     ├── 02-coherence-des-specifications.md  32 divergences tranchées entre les sources
@@ -36,7 +38,8 @@ docs/
     ├── 11-risques-et-mitigations.md
     ├── 12-roadmap-vers-le-lancement.md
     ├── 13-kpi-et-mesure-du-succes.md
-    └── 14-revue-de-la-specification-v1.0.md  Revue de la V1.0 face à l'audit
+    ├── 14-revue-de-la-specification-v1.0.md  Revue de la V1.0 face à l'audit
+    └── 15-revue-des-decisions-v1.1.md        État du GO / NO GO après les décisions V1.1
 ```
 
 ## Définition du succès
