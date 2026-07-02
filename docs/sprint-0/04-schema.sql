@@ -642,6 +642,10 @@ $$;
 -- select cron.schedule('amiora-purge-quotidienne', '30 3 * * *',
 --                      $$select public.purge_soft_deleted();$$);
 
+-- La purge est réservée au serveur : on révoque l'exécution accordée par
+-- défaut à PUBLIC (la fonction est SECURITY DEFINER, prudence obligatoire).
+revoke execute on function public.purge_soft_deleted(interval) from public, anon, authenticated;
+
 -- ----------------------------------------------------------------------------
 -- 11. Index
 -- ----------------------------------------------------------------------------
@@ -713,12 +717,19 @@ end;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 12. Row Level Security
+-- 12. Droits d'accès et Row Level Security
 -- ----------------------------------------------------------------------------
 
--- Activation sur TOUTES les tables : aucune ligne n'est lisible ni modifiable
--- sans politique explicite. Le rôle service (tâches serveur, webhooks)
--- contourne la RLS par construction.
+-- Droits de niveau table (Supabase les pose par défaut ; on les rend
+-- explicites pour que le script soit autoporteur). Le filtrage fin par
+-- ligne est assuré par la RLS ci-dessous : une table sans politique
+-- d'écriture reste ininscriptible même avec ces GRANT.
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to authenticated, service_role;
+
+-- Activation de la RLS sur TOUTES les tables : aucune ligne n'est lisible ni
+-- modifiable sans politique explicite. Le rôle service (tâches serveur,
+-- webhooks) contourne la RLS par construction.
 alter table public.users                    enable row level security;
 alter table public.devices                  enable row level security;
 alter table public.settings                 enable row level security;
