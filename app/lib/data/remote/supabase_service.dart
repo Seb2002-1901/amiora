@@ -9,7 +9,8 @@ import '../../core/logging/logger.dart';
 ///   flutter run --dart-define=SUPABASE_URL=https://xxxx.supabase.co \
 ///               --dart-define=SUPABASE_ANON_KEY=eyJ...
 ///
-/// Seule la clé anon (publique) est acceptée ici — jamais de clé service.
+/// Seule la clé publique est acceptée ici (« publishable key », ou clé
+/// anon héritée) — jamais de clé service.
 abstract final class SupabaseService {
   static const String url = String.fromEnvironment('SUPABASE_URL');
   static const String anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
@@ -21,7 +22,7 @@ abstract final class SupabaseService {
 
   static Future<void> initIfConfigured() async {
     if (!isConfigured || _initialized) return;
-    await Supabase.initialize(url: url, anonKey: anonKey);
+    await Supabase.initialize(url: url, publishableKey: anonKey);
     _initialized = true;
     Log.info('supabase_initialized');
   }

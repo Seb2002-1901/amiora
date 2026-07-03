@@ -199,7 +199,7 @@ class Outbox extends Table {
   PresenceSnapshots,
   AppSettings,
   Outbox,
-])
+],)
 class AmioraDatabase extends _$AmioraDatabase {
   AmioraDatabase(super.executor);
 

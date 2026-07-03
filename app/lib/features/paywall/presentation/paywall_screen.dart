@@ -47,10 +47,10 @@ class PaywallScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AmioraSpacing.x6),
                 // Les cartes passent côte à côte quand la largeur le permet.
-                Wrap(
+                const Wrap(
                   spacing: AmioraSpacing.x3,
                   runSpacing: AmioraSpacing.x3,
-                  children: const [
+                  children: [
                     _PriceCard(
                       title: 'Annuel',
                       price: '44,99 CHF',

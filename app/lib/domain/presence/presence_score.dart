@@ -129,7 +129,7 @@ PresenceResult computePresenceScore({
   final own = interactions
       .where((i) =>
           i.participantIds.contains(rel.id) &&
-          !dateOnly(i.occurredAt).isAfter(day))
+          !dateOnly(i.occurredAt).isAfter(day),)
       .toList();
 
   if (age < kDiscoveryDays && own.isEmpty) {

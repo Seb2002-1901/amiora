@@ -84,7 +84,7 @@ void main() {
           ),
         ],
         today: today,
-      ));
+      ),);
 
       expect(result.components.freshness, 1.0);
       expect(result.components.regularity, closeTo(0.875, 1e-9));
@@ -128,7 +128,7 @@ void main() {
           ),
         ],
         today: today,
-      ));
+      ),);
 
       expect(result.components.freshness, closeTo(0.5, 1e-9));
       expect(result.components.regularity, closeTo(0.625, 1e-9));
@@ -163,7 +163,7 @@ void main() {
           ),
         ],
         today: today,
-      ));
+      ),);
 
       expect(
         result.components.freshness,
@@ -190,7 +190,7 @@ void main() {
         promises: const [],
         importantDates: const [],
         today: today,
-      ));
+      ),);
 
       expect(result.components.freshness, 1.0);
       expect(result.components.regularity, 0.6);
@@ -214,7 +214,7 @@ void main() {
         promises: const [],
         importantDates: const [],
         today: today,
-      ));
+      ),);
 
       expect(result.components.freshness, closeTo(math.sqrt(0.5), 1e-9));
       expect(result.calc, 35);
@@ -242,7 +242,7 @@ void main() {
         promises: const [],
         importantDates: const [],
         today: today,
-      ));
+      ),);
     }
 
     test('F : d = P → 1 ; d = 3P → 0,5 ; d = 5P → 0,25 (famille, P = 7)', () {
@@ -259,7 +259,7 @@ void main() {
         promises: const [],
         importantDates: const [],
         today: today,
-      ));
+      ),);
       expect(result.calc, kScoreFloor);
     });
 
@@ -284,7 +284,7 @@ void main() {
           scoreDisplay: 80,
         ),
         today: today,
-      ));
+      ),);
       expect(result.calc, lessThan(80));
       expect(result.display, 79); // 80 − 1,2 = 78,8 → 79
     });
@@ -310,7 +310,7 @@ void main() {
           scoreDisplay: 50,
         ),
         today: today,
-      ));
+      ),);
       expect(result.display, result.calc);
       expect(result.display, greaterThan(50));
     });
@@ -332,7 +332,7 @@ void main() {
         promises: const [],
         importantDates: const [],
         today: today,
-      ));
+      ),);
       final rb = scoreOf(computePresenceScore(
         rel: b,
         interactions: [shared],
@@ -340,7 +340,7 @@ void main() {
         promises: const [],
         importantDates: const [],
         today: today,
-      ));
+      ),);
       expect(ra.components.freshness, 1.0);
       expect(rb.components.freshness, 1.0);
       expect(ra.calc, rb.calc);

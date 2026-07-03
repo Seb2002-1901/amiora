@@ -98,7 +98,7 @@ void main() {
       final report = await sync.synchronize();
       expect(report.pushed, 4);
       expect(await deviceA.select(deviceA.outbox).get(), isEmpty,
-          reason: 'La file doit être vide après une poussée réussie.');
+          reason: 'La file doit être vide après une poussée réussie.',);
     });
 
     test('Nouvel appareil : restauration complète depuis le serveur',
@@ -177,5 +177,5 @@ void main() {
       await SupabaseService.client.auth.signOut();
       expect(SupabaseService.session, isNull);
     });
-  }, skip: skip);
+  }, skip: skip,);
 }

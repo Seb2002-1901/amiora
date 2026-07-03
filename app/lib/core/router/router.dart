@@ -1,16 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/remote/supabase_service.dart';
-import '../../features/common/access.dart';
-
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
 import '../../features/calendar/presentation/calendar_screen.dart';
+import '../../features/common/access.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/in_memoriam/presentation/in_memoriam_screen.dart';
 import '../../features/interactions/presentation/add_interaction_sheet.dart';
@@ -56,7 +54,7 @@ final GoRouter appRouter = GoRouter(
       branches: [
         StatefulShellBranch(routes: [
           GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-        ]),
+        ],),
         StatefulShellBranch(routes: [
           GoRoute(
             path: '/relationships',
@@ -73,10 +71,10 @@ final GoRouter appRouter = GoRouter(
               ),
             ],
           ),
-        ]),
+        ],),
         StatefulShellBranch(routes: [
           GoRoute(path: '/memories', builder: (_, __) => const MemoriesScreen()),
-        ]),
+        ],),
         StatefulShellBranch(routes: [
           GoRoute(
             path: '/profile',
@@ -92,7 +90,7 @@ final GoRouter appRouter = GoRouter(
               ),
             ],
           ),
-        ]),
+        ],),
       ],
     ),
     GoRoute(path: '/calendar', builder: (_, __) => const CalendarScreen()),

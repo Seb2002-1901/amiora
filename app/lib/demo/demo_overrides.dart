@@ -48,7 +48,7 @@ final _promises = <Promise>[
     status: 'todo',
     dueDate: _now.add(const Duration(days: 20)),
   ),
-  Promise(
+  const Promise(
     id: 'pro3',
     relationshipId: 'papa',
     title: 'Appeler papa cette semaine',

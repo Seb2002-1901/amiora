@@ -8,8 +8,8 @@ import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
 import '../../../data/local/database.dart';
-import '../../../domain/presence/presence_score.dart' show kDefaultCadenceDays;
 import '../../../domain/entities/entities.dart' as domain;
+import '../../../domain/presence/presence_score.dart' show kDefaultCadenceDays;
 import '../../common/presence_ui.dart';
 
 class AddRelationshipScreen extends ConsumerStatefulWidget {

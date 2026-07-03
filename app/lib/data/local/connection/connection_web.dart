@@ -11,5 +11,5 @@ QueryExecutor openAmioraConnection() {
       driftWorkerUri: Uri.parse('drift_worker.js'),
     );
     return result.resolvedExecutor;
-  }));
+  }),);
 }
