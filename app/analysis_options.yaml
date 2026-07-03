@@ -1,0 +1,25 @@
+# Analyse statique d'AMIORA — base flutter_lints + durcissements raisonnables.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    # Aucun `print` dans le code : la journalisation passe par AppLogger
+    # (architecture Sprint 0, § 5.3).
+    avoid_print: error
+
+linter:
+  rules:
+    always_declare_return_types: true
+    avoid_print: true
+    directives_ordering: true
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    sort_pub_dependencies: true
+    unawaited_futures: true

@@ -1,0 +1,46 @@
+# Divers
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Flutter / Dart / Pub
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Le fichier pubspec.lock est volontairement versionné (application, pas package).
+
+# Projets natifs : non versionnés dans ce squelette, régénérés via
+# `flutter create --platforms ios,android .` (voir README).
+/android/
+/ios/
+
+# Symbolication et obfuscation
+app.*.symbols
+app.*.map.json
+
+# Fichiers d'environnement (--dart-define-from-file) : jamais commités
+/env/*.json
