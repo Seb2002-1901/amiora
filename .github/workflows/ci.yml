@@ -84,6 +84,6 @@ jobs:
         run: sed -i '' '/^# Environnement CI derrière proxy/,$d' pubspec.yaml
       - run: flutter pub get
       - run: dart run build_runner build --delete-conflicting-outputs
-      - name: Générer le dossier iOS (non versionné)
-        run: flutter create --platforms ios --project-name amiora --org ch.amiora .
+      # Le projet Xcode (app/ios) est versionné : identifiant ch.amiora.amiora,
+      # schéma d'URL OAuth, déclaration de chiffrement pour TestFlight.
       - run: flutter build ios --no-codesign --debug

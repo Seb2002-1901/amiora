@@ -33,10 +33,23 @@ migrate_working_dir/
 
 # Le fichier pubspec.lock est volontairement versionné (application, pas package).
 
-# Projets natifs : non versionnés dans ce squelette, régénérés via
-# `flutter create --platforms ios,android .` (voir README).
+# Android : non versionné, régénéré en CI via
+# `flutter create --platforms android .` (voir .github/workflows/ci.yml).
 /android/
-/ios/
+
+# iOS : projet Xcode VERSIONNÉ (identifiant, schéma OAuth, réglages
+# TestFlight) — seuls les fichiers générés à chaque build sont ignorés.
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/ephemeral/
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Pods/
+/ios/Podfile.lock
+/ios/.symlinks/
+/ios/Runner.xcworkspace/xcshareddata/swiftpm/
+/ios/**/xcuserdata/
 
 # Symbolication et obfuscation
 app.*.symbols
