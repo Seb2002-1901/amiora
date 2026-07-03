@@ -1,0 +1,398 @@
+<!-- AMIORA — Maquettes 1/2 : écrans principaux (1-9). Autonome, sans dépendance. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMIORA — Maquettes 1/2 : écrans principaux</title>
+<style>
+:root{--bg:#0B0B0D;--surface:#1A1A1E;--surface2:#232329;--border:#2E2E33;
+--gold:#D9B45B;--gold-press:#B8963F;--on-gold:#1A1405;
+--text:#F4F1E9;--text2:#A9A6A0;--text3:#6E6C68;
+--success:#8BC49A;--warning:#E0A45C;--error:#C96A5E;--error-text:#DE8478;
+--r-card:24px;--r-btn:16px;--r-input:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#141416;color:var(--text);font:16px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;padding:32px}
+header.page{max-width:1400px;margin:0 auto 32px}
+header.page h1{font-size:24px;font-weight:700;letter-spacing:.5px}
+header.page p{color:var(--text2);font-size:14px;margin-top:6px}
+header.page a{color:var(--gold)}
+.board{display:flex;flex-wrap:wrap;gap:36px;max-width:1400px;margin:0 auto;justify-content:center}
+.cell{display:flex;flex-direction:column;gap:10px;align-items:center}
+.cell>figcaption{color:var(--text2);font-size:13px;text-align:center;max-width:390px}
+.ph{width:390px;height:844px;background:var(--bg);border:1px solid var(--border);border-radius:40px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:600;flex:none}
+.status .din{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:110px;height:26px;background:#000;border-radius:14px}
+.sicons{display:flex;gap:5px;align-items:center}
+.content{flex:1;overflow:hidden;padding:8px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.tabbar{flex:none;height:78px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--text2)}
+.tab.on{color:var(--gold)}
+.tab svg{stroke:currentColor}
+.plusbtn{width:48px;height:48px;border-radius:999px;background:var(--gold);display:flex;align-items:center;justify-content:center;margin-top:-14px;box-shadow:0 8px 24px rgba(217,180,91,.25)}
+.plusbtn svg{stroke:var(--on-gold)}
+.gesture{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:130px;height:5px;border-radius:3px;background:var(--text3);opacity:.55}
+h1.s{font-size:24px;font-weight:700}
+h2.s{font-size:20px;font-weight:600}
+.sub{color:var(--text2);font-size:14px}
+.cap{color:var(--text3);font-size:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px}
+.row{display:flex;align-items:center;gap:12px}
+.grow{flex:1;min-width:0}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar{width:48px;height:48px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;flex:none}
+.avatar.lg{width:88px;height:88px;font-size:32px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;height:52px;border-radius:var(--r-btn);font-weight:600;font-size:16px}
+.btn-gold{background:var(--gold);color:var(--on-gold)}
+.btn-line{border:1px solid var(--border);color:var(--text)}
+.btn-white{background:#fff;color:#000}
+.input{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-input);padding:14px 16px;color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.input .ph-t{color:var(--text3)}
+.lab{font-size:12px;color:var(--text2);margin:2px 0 6px 4px;text-transform:uppercase;letter-spacing:.6px}
+.track{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.fill{height:100%;border-radius:3px}
+.b-gold{background:var(--gold)}.b-ok{background:var(--success)}.b-warn{background:var(--warning)}.b-low{background:var(--text2)}
+.t-gold{color:var(--gold)}.t-ok{color:var(--success)}.t-warn{color:var(--warning)}.t-low{color:var(--text2)}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--border);font-size:13px;color:var(--text2);white-space:nowrap}
+.chip.on{background:rgba(217,180,91,.14);border-color:var(--gold);color:var(--gold)}
+.chips{display:flex;gap:8px;overflow:hidden}
+.dots{display:flex;gap:8px;justify-content:center}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--surface2)}
+.dot.on{background:var(--gold);width:22px}
+.act{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0}
+.act .ico{width:52px;height:52px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.act span{font-size:12px;color:var(--text2)}
+.sheetwrap{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end}
+.sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:10px 16px 26px;width:100%;display:flex;flex-direction:column;gap:14px}
+.handle{width:44px;height:5px;border-radius:3px;background:var(--surface2);margin:0 auto}
+.typegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px}
+.type{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:16px;border:1px solid var(--border);color:var(--text2);font-size:11px;text-align:center}
+.type.on{border-color:var(--gold);background:rgba(217,180,91,.12);color:var(--gold)}
+.type svg{stroke:currentColor}
+.people{display:flex;gap:12px;overflow:hidden}
+.pers{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--text2);flex:none}
+.pers.on .avatar{border:2px solid var(--gold)}
+.pers.on{color:var(--gold)}
+.badge{position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;border-radius:99px;background:var(--gold);display:flex;align-items:center;justify-content:center}
+.badge svg{stroke:var(--on-gold)}
+svg.i{width:24px;height:24px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.i.s20{width:20px;height:20px}
+svg.i.s28{width:28px;height:28px}
+.logo-heart{stroke:var(--gold)}
+.hr{height:1px;background:var(--border)}
+.mention{font-size:12px;color:var(--text3);text-align:center;line-height:1.5}
+</style>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9C3.5 6 5.8 4 8.2 4c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.4 0 4.7 2 4.7 4.9C20.5 15 12 20.5 12 20.5Z"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m5 18 5-5 3 3 2.5-2.5L20 18"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 20c1.4-3.2 4-4.8 7.2-4.8s5.8 1.6 7.2 4.8"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10.3 19.5a2 2 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 19 8 12l7-7"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L4 20l1-4.6A8.5 8.5 0 1 1 21 11.5Z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="4"/><path d="M5.5 12v8h13v-8M12 8v12M12 8s-4 .2-4.7-2C6.7 4 9 3 10.3 4.2 11.6 5.3 12 8 12 8Zm0 0s4 .2 4.7-2C17.3 4 15 3 13.7 4.2 12.4 5.3 12 8 12 8Z"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3H9.8l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4.4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 24 24"><path d="M7 3v7c0 1.2.8 2 2 2s2-.8 2-2V3M9 3v18M16 3c-1.7 0-3 2.2-3 5 0 2.2 1 3.5 2 4v9M16 3c1 0 2 2.2 2 5 0 2.2-1 3.5-2 4"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6-2.5-2 1-5 5.5 2 2 3M8 12l1.5-4.5L14 9"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M10.5 13.5 3 11l1.5-2 6.5 1 5-6 2 1-3 6.5 5.5 2-1.5 2-6-1-3 4.5-2-.5 1-5Z"/></symbol>
+  <symbol id="i-house" viewBox="0 0 24 24"><path d="M4 11l8-6.5L20 11v9h-5v-5h-6v5H4Z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9Z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 4v4M12 16v4M4 12h4M16 12h4M6.5 6.5l2.8 2.8M14.7 14.7l2.8 2.8M17.5 6.5l-2.8 2.8M9.3 14.7l-2.8 2.8"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3.5h9L19 7.5v13H6Z"/><path d="M14.5 3.5v4.5H19M9 12h6M9 15.5h6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-apple" viewBox="0 0 24 24"><path d="M15.5 6.7c-.8 1-2 1.6-3.2 1.5-.2-1.2.3-2.5 1-3.3.8-.9 2.1-1.6 3.2-1.6.1 1.2-.3 2.5-1 3.4ZM16.5 8.6c-1.8-.1-3.3 1-4.1 1s-2.1-1-3.5-1c-1.8 0-3.5 1-4.4 2.7-1.9 3.3-.5 8.2 1.3 10.9.9 1.3 2 2.8 3.4 2.7 1.4 0 1.9-.9 3.5-.9s2.1.9 3.5.9 2.4-1.3 3.3-2.6c1-1.5 1.5-3 1.5-3.1-.1 0-2.9-1.1-2.9-4.4 0-2.7 2.2-4 2.3-4.1-1.3-1.8-3.2-2-3.9-2.1Z"/></symbol>
+  <symbol id="i-google" viewBox="0 0 24 24"><path d="M21 12.2c0-.7-.1-1.2-.2-1.8H12v3.5h5.1a4.4 4.4 0 0 1-1.9 2.9v2.4h3C20.1 17.5 21 15.1 21 12.2Z"/><path d="M12 21c2.4 0 4.5-.8 6-2.2l-3-2.3c-.8.5-1.8.9-3 .9-2.3 0-4.3-1.6-5-3.7H4v2.4A9 9 0 0 0 12 21Z"/><path d="M7 13.7a5.4 5.4 0 0 1 0-3.4V7.9H4a9 9 0 0 0 0 8.2Z"/><path d="M12 6.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 4 7.9l3 2.4c.7-2.1 2.7-3.7 5-3.7Z"/></symbol>
+</svg>
+
+<header class="page">
+  <h1>AMIORA — Maquettes 1/2 : écrans principaux</h1>
+  <p>Écrans 1 à 9 du PRD V1.2 · design system Sprint 0 (thème sombre, or premium, icônes au trait, avatars à initiales) · police finale : Inter (embarquée dans l'app) · suite : <a href="02-ecrans-secondaires.html">écrans secondaires et états</a> · <a href="03-apercus-responsive.html">aperçus responsive</a>.</p>
+</header>
+
+<div class="board">
+
+<!-- 1. SPLASH -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span class="sicons"><svg class="i s20" viewBox="0 0 24 24" style="stroke:var(--text)"><path d="M2 20h2v-6H2Zm5 0h2V9H7Zm5 0h2V4h-2Zm5 0h2v-9h-2Z"/></svg></span></div>
+  <div class="content" style="justify-content:center;align-items:center;gap:24px">
+    <svg class="i logo-heart" style="width:76px;height:76px" viewBox="0 0 24 24"><path d="M12 20.5S3.5 15 3.5 8.9C3.5 6 5.8 4 8.2 4c1.6 0 3 .8 3.8 2 .8-1.2 2.2-2 3.8-2 2.4 0 4.7 2 4.7 4.9C20.5 15 12 20.5 12 20.5Z"/><path d="M12 17.5s-5.5-3.7-5.5-7.6" opacity=".5"/></svg>
+    <div style="text-align:center">
+      <div style="font-size:34px;font-weight:700;letter-spacing:10px;color:var(--gold);padding-left:10px">AMIORA</div>
+      <div class="sub" style="margin-top:12px;letter-spacing:1px">Prends soin des personnes qui comptent.</div>
+    </div>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>1 · Splash</figcaption>
+</figure>
+
+<!-- 2a. ONBOARDING 1 -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="justify-content:center;align-items:center;gap:28px;text-align:center">
+    <svg class="i logo-heart" style="width:120px;height:120px;stroke-width:1.2" viewBox="0 0 24 24"><circle cx="9" cy="10" r="4.2"/><circle cx="15" cy="10" r="4.2" opacity=".6"/><path d="M7 19c1.6-2 3.2-3 5-3s3.4 1 5 3" opacity=".8"/></svg>
+    <h1 class="s" style="max-width:280px">Les plus belles relations se construisent avec de petites attentions.</h1>
+    <p class="sub" style="max-width:280px">AMIORA t'aide à rester présent, sans rien oublier.</p>
+    <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+  </div>
+  <div class="content" style="flex:none;padding-bottom:28px"><div class="btn btn-gold">Continuer</div></div>
+  <div class="gesture"></div>
+</div>
+<figcaption>2a · Onboarding — intention</figcaption>
+</figure>
+
+<!-- 2b. ONBOARDING 2 -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="justify-content:center;gap:16px">
+    <h1 class="s" style="text-align:center;margin-bottom:8px">Nous t'aiderons à…</h1>
+    <div class="card row"><span class="act ico" style="flex:none;width:44px;height:44px;border-radius:99px;background:var(--surface2);display:flex;align-items:center;justify-content:center"><svg class="i t-gold s20"><use href="#i-heart"/></svg></span><div class="grow"><b>Rester présent</b><div class="sub">Des rappels doux, jamais culpabilisants.</div></div></div>
+    <div class="card row"><span style="flex:none;width:44px;height:44px;border-radius:99px;background:var(--surface2);display:flex;align-items:center;justify-content:center"><svg class="i t-gold s20"><use href="#i-cam"/></svg></span><div class="grow"><b>Créer des souvenirs</b><div class="sub">Photos, notes et moments précieux.</div></div></div>
+    <div class="card row"><span style="flex:none;width:44px;height:44px;border-radius:99px;background:var(--surface2);display:flex;align-items:center;justify-content:center"><svg class="i t-gold s20"><use href="#i-bell"/></svg></span><div class="grow"><b>Ne rien oublier</b><div class="sub">Anniversaires, promesses, dates importantes.</div></div></div>
+    <div class="dots" style="margin-top:16px"><span class="dot"></span><span class="dot on"></span><span class="dot"></span></div>
+  </div>
+  <div class="content" style="flex:none;padding-bottom:28px"><div class="btn btn-gold">Continuer</div></div>
+  <div class="gesture"></div>
+</div>
+<figcaption>2b · Onboarding — promesses</figcaption>
+</figure>
+
+<!-- 2c. ONBOARDING 3 (essai) -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="justify-content:center;align-items:center;gap:20px;text-align:center">
+    <svg class="i logo-heart" style="width:64px;height:64px"><use href="#i-heart"/></svg>
+    <h1 class="s" style="max-width:300px">Essaie AMIORA librement pendant 14 jours.</h1>
+    <p class="sub" style="max-width:290px">Accès complet. Aucun engagement : annulable à tout moment dans les réglages Apple ou Google.</p>
+    <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot on"></span></div>
+  </div>
+  <div class="content" style="flex:none;gap:10px;padding-bottom:24px">
+    <div class="btn btn-gold">Commencer l'essai gratuit de 14 jours</div>
+    <p class="mention">Puis 5,99 CHF/mois ou 44,99 CHF/an. Renouvellement automatique, annulable à tout moment.</p>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>2c · Onboarding — essai 14 jours</figcaption>
+</figure>
+
+<!-- 3. CONNEXION -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="justify-content:center;gap:14px">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:22px;font-weight:700;letter-spacing:6px;color:var(--gold);padding-left:6px">AMIORA</div>
+      <p class="sub" style="margin-top:8px">Heureux de te revoir.</p>
+    </div>
+    <div class="btn btn-white"><svg class="i s20" style="fill:#000;stroke:none"><use href="#i-apple"/></svg>Continuer avec Apple</div>
+    <div class="btn btn-line"><svg class="i s20" style="fill:var(--text);stroke:none"><use href="#i-google"/></svg>Continuer avec Google</div>
+    <div class="row" style="gap:12px;margin:6px 0"><div class="hr grow"></div><span class="cap">ou</span><div class="hr grow"></div></div>
+    <div><div class="lab">E-mail</div><div class="input"><span class="ph-t">prenom@exemple.ch</span></div></div>
+    <div class="btn btn-gold">Continuer</div>
+    <div style="text-align:center" class="sub">Mot de passe oublié ? <span class="t-gold">Réinitialiser</span></div>
+  </div>
+  <div class="content" style="flex:none;padding-bottom:24px"><div class="sub" style="text-align:center">Pas encore de compte ? <b class="t-gold">Créer un compte</b></div></div>
+  <div class="gesture"></div>
+</div>
+<figcaption>3 · Connexion</figcaption>
+</figure>
+
+<!-- 4. CRÉATION DU COMPTE -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content">
+    <div class="row" style="height:44px"><svg class="i"><use href="#i-back"/></svg><h2 class="s grow">Créer mon compte</h2></div>
+    <div><div class="lab">Prénom</div><div class="input">Sébastien</div></div>
+    <div><div class="lab">E-mail</div><div class="input">sebastien@exemple.ch</div></div>
+    <div><div class="lab">Mot de passe</div><div class="input"><span>••••••••••</span><svg class="i s20" style="stroke:var(--text3)"><use href="#i-check"/></svg></div><div class="cap" style="margin:6px 4px 0">Au moins 10 caractères, dont un chiffre.</div></div>
+    <label class="row" style="align-items:flex-start;gap:10px;margin-top:6px">
+      <span style="width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border);flex:none;margin-top:2px"></span>
+      <span class="sub">J'accepte les <span class="t-gold">Conditions générales</span> et la <span class="t-gold">Politique de confidentialité</span>.</span>
+    </label>
+    <div class="btn btn-gold" style="opacity:.5;margin-top:8px">Créer mon compte</div>
+    <p class="mention">Tes données restent privées : jamais partagées, jamais vendues, jamais de publicité.</p>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>4 · Création du compte (case non pré-cochée → bouton inactif)</figcaption>
+</figure>
+
+<!-- 5. ACCUEIL -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="gap:12px">
+    <div class="row" style="margin-top:4px">
+      <div class="grow"><div class="cap">Jeudi 5 mars</div><h1 class="s">Bonjour Sébastien</h1></div>
+      <svg class="i" style="stroke:var(--text2)"><use href="#i-bell"/></svg>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="cap" style="letter-spacing:1px">AUJOURD'HUI</div>
+      <div class="row"><svg class="i s20 t-gold"><use href="#i-gift"/></svg><div class="grow ell">Anniversaire de <b>Julie</b> dans 3 jours</div><svg class="i s20" style="stroke:var(--text3)"><use href="#i-chev"/></svg></div>
+      <div class="hr"></div>
+      <div class="row"><svg class="i s20 t-gold"><use href="#i-phone"/></svg><div class="grow ell">Un appel à <b>Papa</b> cette semaine ?</div><svg class="i s20" style="stroke:var(--text3)"><use href="#i-chev"/></svg></div>
+    </div>
+    <div class="card">
+      <div class="row"><div class="grow"><b>Ton cercle</b></div><b class="t-warn">68</b><span class="cap">·</span><span class="sub t-warn">À entretenir</span></div>
+      <div class="track" style="margin-top:10px"><div class="fill b-warn" style="width:68%"></div></div>
+    </div>
+    <div class="row" style="margin-top:2px"><b class="grow">Tes relations</b><span class="sub t-gold">Tout voir</span></div>
+    <div class="card row"><div class="avatar">E</div><div class="grow"><div class="ell"><b>Emma</b> <span class="cap">· Partenaire</span></div><div class="sub ell">Dernier message : aujourd'hui</div></div><div style="text-align:right"><b class="t-gold">94</b><div class="cap t-gold">Très entretenue</div></div></div>
+    <div class="card row"><div class="avatar">M</div><div class="grow"><div class="ell"><b>Maman</b> <span class="cap">· Famille</span></div><div class="sub ell">Dernier appel : hier</div></div><div style="text-align:right"><b class="t-ok">88</b><div class="cap t-ok">Bien entretenue</div></div></div>
+    <div class="card row"><div class="avatar">P</div><div class="grow"><div class="ell"><b>Papa</b> <span class="cap">· Famille</span></div><div class="sub ell">Dernier appel : il y a 21 jours</div></div><div style="text-align:right"><b class="t-warn">65</b><div class="cap t-warn">À entretenir</div></div></div>
+  </div>
+  <div class="tabbar">
+    <div class="tab on"><svg class="i"><use href="#i-home"/></svg>Accueil</div>
+    <div class="tab"><svg class="i"><use href="#i-heart"/></svg>Relations</div>
+    <div class="tab"><span class="plusbtn"><svg class="i s28"><use href="#i-plus"/></svg></span></div>
+    <div class="tab"><svg class="i"><use href="#i-image"/></svg>Souvenirs</div>
+    <div class="tab"><svg class="i"><use href="#i-user"/></svg>Profil</div>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>5 · Accueil</figcaption>
+</figure>
+
+<!-- 6. RELATIONS -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="gap:12px">
+    <h1 class="s" style="margin-top:4px">Relations</h1>
+    <div class="input"><svg class="i s20" style="stroke:var(--text3)"><use href="#i-search"/></svg><span class="ph-t grow">Rechercher…</span></div>
+    <div class="chips"><span class="chip on">Toutes</span><span class="chip">Partenaire</span><span class="chip">Famille</span><span class="chip">Amis</span><span class="chip">Enfants</span></div>
+    <div class="card row" style="border-color:rgba(224,164,92,.4)"><div class="avatar">T</div><div class="grow"><div class="ell"><b>Thomas</b> <span class="cap">· Ami</span></div><div class="sub ell t-warn">Prenez des nouvelles</div></div><div style="text-align:right"><b class="t-low">27</b><div class="cap t-low">Peu entretenue</div></div></div>
+    <div class="card row"><div class="avatar">G</div><div class="grow"><div class="ell"><b>Grand-maman</b> <span class="cap">· Famille</span></div><div class="sub ell">Dernière visite : il y a 41 jours</div></div><div style="text-align:right"><b class="t-warn">58</b><div class="cap t-warn">À entretenir</div></div></div>
+    <div class="card row"><div class="avatar">P</div><div class="grow"><div class="ell"><b>Papa</b> <span class="cap">· Famille</span></div><div class="sub ell">Dernier appel : il y a 21 jours</div></div><div style="text-align:right"><b class="t-warn">65</b><div class="cap t-warn">À entretenir</div></div></div>
+    <div class="card row"><div class="avatar">J</div><div class="grow"><div class="ell"><b>Julie</b> <span class="cap">· Amie</span></div><div class="sub ell t-gold">Anniversaire dans 3 jours</div></div><div style="text-align:right"><b class="t-ok">76</b><div class="cap t-ok">Bien entretenue</div></div></div>
+    <div class="card row"><div class="avatar">M</div><div class="grow"><div class="ell"><b>Maman</b> <span class="cap">· Famille</span></div><div class="sub ell">Dernier appel : hier</div></div><div style="text-align:right"><b class="t-ok">88</b><div class="cap t-ok">Bien entretenue</div></div></div>
+    <div class="card row"><div class="avatar">E</div><div class="grow"><div class="ell"><b>Emma</b> <span class="cap">· Partenaire</span></div><div class="sub ell">Dernier message : aujourd'hui</div></div><div style="text-align:right"><b class="t-gold">94</b><div class="cap t-gold">Très entretenue</div></div></div>
+  </div>
+  <div class="tabbar">
+    <div class="tab"><svg class="i"><use href="#i-home"/></svg>Accueil</div>
+    <div class="tab on"><svg class="i"><use href="#i-heart"/></svg>Relations</div>
+    <div class="tab"><span class="plusbtn"><svg class="i s28"><use href="#i-plus"/></svg></span></div>
+    <div class="tab"><svg class="i"><use href="#i-image"/></svg>Souvenirs</div>
+    <div class="tab"><svg class="i"><use href="#i-user"/></svg>Profil</div>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>6 · Relations — tri par attention utile, filtres</figcaption>
+</figure>
+
+<!-- 7. AJOUTER UNE RELATION -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="gap:12px">
+    <div class="row" style="height:44px"><svg class="i"><use href="#i-back"/></svg><h2 class="s grow">Ajouter une relation</h2></div>
+    <div style="display:flex;justify-content:center;padding:6px 0">
+      <div class="avatar lg" style="position:relative"><svg class="i" style="stroke:var(--text2)"><use href="#i-cam"/></svg><span class="badge"><svg class="i" style="width:12px;height:12px"><use href="#i-plus"/></svg></span></div>
+    </div>
+    <div class="row" style="gap:10px">
+      <div class="grow"><div class="lab">Prénom</div><div class="input">Papa</div></div>
+      <div class="grow"><div class="lab">Nom</div><div class="input"><span class="ph-t">Facultatif</span></div></div>
+    </div>
+    <div><div class="lab">Catégorie</div><div class="input">Famille<svg class="i s20" style="stroke:var(--text3);transform:rotate(90deg)"><use href="#i-chev"/></svg></div></div>
+    <div class="card row" style="padding:12px 16px;border-color:rgba(217,180,91,.35)"><svg class="i s20 t-gold"><use href="#i-clock"/></svg><div class="grow sub">Attention proposée : <b style="color:var(--text)">toutes les semaines</b></div><span class="t-gold" style="font-size:13px">Modifier</span></div>
+    <div><div class="lab">Date de naissance</div><div class="input">12 juin 1958</div></div>
+    <div class="row" style="gap:10px">
+      <div class="grow"><div class="lab">Téléphone</div><div class="input"><span class="ph-t">+41…</span></div></div>
+      <div class="grow"><div class="lab">E-mail</div><div class="input"><span class="ph-t">Facultatif</span></div></div>
+    </div>
+    <div class="input"><span class="sub">Plus de détails — adresse, métier, notes</span><svg class="i s20" style="stroke:var(--text3)"><use href="#i-chev"/></svg></div>
+    <div class="btn btn-gold" style="margin-top:4px">Enregistrer</div>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>7 · Ajouter une relation — cadence proposée selon la catégorie</figcaption>
+</figure>
+
+<!-- 8. FICHE RELATION -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="gap:12px">
+    <div class="row" style="height:40px"><svg class="i"><use href="#i-back"/></svg><div class="grow"></div><svg class="i" style="stroke:var(--text2)"><use href="#i-set"/></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div class="avatar lg">P</div>
+      <h1 class="s">Papa</h1><span class="chip" style="padding:4px 12px">Famille</span>
+    </div>
+    <div class="card">
+      <div class="row"><b class="grow">Indice de présence</b><b class="t-warn" style="font-size:20px">65</b></div>
+      <div class="track" style="margin:10px 0 6px"><div class="fill b-warn" style="width:65%"></div></div>
+      <div class="row"><span class="sub t-warn grow">À entretenir</span><span class="cap">Dernier appel : il y a 21 jours</span></div>
+    </div>
+    <div class="row" style="gap:0">
+      <div class="act"><span class="ico"><svg class="i t-gold"><use href="#i-phone"/></svg></span><span>Appeler</span></div>
+      <div class="act"><span class="ico"><svg class="i t-gold"><use href="#i-msg"/></svg></span><span>Écrire</span></div>
+      <div class="act"><span class="ico"><svg class="i t-gold"><use href="#i-cal"/></svg></span><span>Planifier</span></div>
+      <div class="act"><span class="ico"><svg class="i t-gold"><use href="#i-gift"/></svg></span><span>Cadeau</span></div>
+    </div>
+    <div class="btn btn-gold"><svg class="i s20" style="stroke:var(--on-gold)"><use href="#i-plus"/></svg>Enregistrer une interaction</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="cap" style="letter-spacing:1px">DERNIÈRES INTERACTIONS</div>
+      <div class="row"><svg class="i s20" style="stroke:var(--text2)"><use href="#i-phone"/></svg><span class="grow">Appel · 25 min</span><span class="cap">Il y a 21 jours</span></div>
+      <div class="row"><svg class="i s20" style="stroke:var(--text2)"><use href="#i-fork"/></svg><span class="grow">Repas de famille</span><span class="cap">Il y a 28 jours</span></div>
+    </div>
+    <div class="card row"><svg class="i s20 t-gold"><use href="#i-gift"/></svg><span class="grow">Anniversaire</span><span class="sub">12 juin</span></div>
+    <div class="row" style="justify-content:center"><span class="cap">Archiver la relation</span></div>
+  </div>
+  <div class="gesture"></div>
+</div>
+<figcaption>8 · Fiche relation — action centrale mise en avant</figcaption>
+</figure>
+
+<!-- 9. AJOUTER UNE INTERACTION -->
+<figure class="cell">
+<div class="ph">
+  <div class="status"><span>9:41</span><span class="din"></span><span></span></div>
+  <div class="content" style="gap:12px;filter:blur(2px);opacity:.5">
+    <div class="row" style="margin-top:4px"><div class="grow"><div class="cap">Jeudi 5 mars</div><h1 class="s">Bonjour Sébastien</h1></div><svg class="i" style="stroke:var(--text2)"><use href="#i-bell"/></svg></div>
+    <div class="card"><div class="row"><div class="grow"><b>Ton cercle</b></div><b class="t-warn">68</b></div><div class="track" style="margin-top:10px"><div class="fill b-warn" style="width:68%"></div></div></div>
+  </div>
+  <div class="sheetwrap">
+    <div class="sheet">
+      <div class="handle"></div>
+      <h2 class="s">Ajouter une interaction</h2>
+      <div class="people">
+        <div class="pers on"><span style="position:relative"><span class="avatar">P</span><span class="badge"><svg class="i" style="width:11px;height:11px"><use href="#i-check"/></svg></span></span>Papa</div>
+        <div class="pers"><span class="avatar">E</span>Emma</div>
+        <div class="pers"><span class="avatar">M</span>Maman</div>
+        <div class="pers"><span class="avatar">J</span>Julie</div>
+        <div class="pers"><span class="avatar">G</span>Grand-m.</div>
+        <div class="pers"><span class="avatar">T</span>Thomas</div>
+      </div>
+      <div class="typegrid">
+        <div class="type on"><svg class="i"><use href="#i-phone"/></svg>Appel</div>
+        <div class="type"><svg class="i"><use href="#i-msg"/></svg>Message</div>
+        <div class="type"><svg class="i"><use href="#i-fork"/></svg>Repas</div>
+        <div class="type"><svg class="i"><use href="#i-walk"/></svg>Sortie</div>
+        <div class="type"><svg class="i"><use href="#i-plane"/></svg>Voyage</div>
+        <div class="type"><svg class="i"><use href="#i-house"/></svg>Visite</div>
+        <div class="type"><svg class="i"><use href="#i-gift"/></svg>Cadeau</div>
+        <div class="type"><svg class="i"><use href="#i-spark"/></svg>Moment</div>
+        <div class="type"><svg class="i"><use href="#i-cam"/></svg>Photo</div>
+        <div class="type"><svg class="i"><use href="#i-star"/></svg>Événement</div>
+      </div>
+      <div class="row"><div class="input grow" style="padding:12px 16px">Aujourd'hui<svg class="i s20" style="stroke:var(--text3)"><use href="#i-cal"/></svg></div><span class="sub t-gold" style="flex:none">+ Détails</span></div>
+      <div class="btn btn-gold">Enregistrer</div>
+    </div>
+  </div>
+  <div class="gesture" style="background:var(--text)"></div>
+</div>
+<figcaption>9 · Ajouter une interaction — personne + type suffisent (&lt; 10 s)</figcaption>
+</figure>
+
+</div>
+<p style="text-align:center;color:var(--text3);font-size:13px;margin:36px 0 8px">AMIORA · Maquettes Sprint 0 · Données de démonstration canoniques (jeudi 5 mars 2026) · Avatars à initiales (pas de photos : droits d'image)</p>
