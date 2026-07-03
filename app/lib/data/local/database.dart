@@ -218,16 +218,24 @@ class AmioraDatabase extends _$AmioraDatabase {
   Future<Relationship?> relationshipById(String id) =>
       (select(relationships)..where((r) => r.id.equals(id))).getSingleOrNull();
 
-  Future<void> insertRelationship(RelationshipsCompanion entry) =>
-      into(relationships).insert(entry);
+  Future<void> insertRelationship(RelationshipsCompanion entry) {
+    return transaction(() async {
+      await into(relationships).insert(entry);
+      await journalMutation('relationships', entry.id.value, 'create');
+    });
+  }
 
-  Future<void> setRelationshipStatus(String id, String status) =>
-      (update(relationships)..where((r) => r.id.equals(id))).write(
+  Future<void> setRelationshipStatus(String id, String status) {
+    return transaction(() async {
+      await (update(relationships)..where((r) => r.id.equals(id))).write(
         RelationshipsCompanion(
           status: Value(status),
           archivedAt: Value(status == 'active' ? null : DateTime.now()),
         ),
       );
+      await journalMutation('relationships', id, 'update');
+    });
+  }
 
   // ---- Interactions (le geste central) -------------------------------
 
@@ -246,6 +254,7 @@ class AmioraDatabase extends _$AmioraDatabase {
           ),
         );
       }
+      await journalMutation('interactions', entry.id.value, 'create');
     });
   }
 
@@ -318,6 +327,7 @@ class AmioraDatabase extends _$AmioraDatabase {
           ),
         );
       }
+      await journalMutation('memories', entry.id.value, 'create');
     });
   }
 
@@ -333,16 +343,42 @@ class AmioraDatabase extends _$AmioraDatabase {
         .watch();
   }
 
-  Future<void> insertPromise(PromisesCompanion entry) =>
-      into(promises).insert(entry);
+  Future<void> insertPromise(PromisesCompanion entry) {
+    return transaction(() async {
+      await into(promises).insert(entry);
+      await journalMutation('promises', entry.id.value, 'create');
+    });
+  }
 
-  Future<void> setPromiseStatus(String id, String status) =>
-      (update(promises)..where((p) => p.id.equals(id)))
+  Future<void> setPromiseStatus(String id, String status) {
+    return transaction(() async {
+      await (update(promises)..where((p) => p.id.equals(id)))
           .write(PromisesCompanion(status: Value(status)));
+      await journalMutation('promises', id, 'update');
+    });
+  }
 
-  Future<void> softDeletePromise(String id) =>
-      (update(promises)..where((p) => p.id.equals(id)))
+  Future<void> softDeletePromise(String id) {
+    return transaction(() async {
+      await (update(promises)..where((p) => p.id.equals(id)))
           .write(PromisesCompanion(deletedAt: Value(DateTime.now())));
+      await journalMutation('promises', id, 'delete');
+    });
+  }
+
+  /// Journalise une mutation dans la file de synchronisation (outbox).
+  /// La poussée relit l'état COURANT de la ligne : la file ne porte que
+  /// l'ordre et l'identité, jamais une charge utile figée.
+  Future<void> journalMutation(String entity, String entityId, String op) =>
+      into(outbox).insert(
+        OutboxCompanion.insert(
+          entity: entity,
+          entityId: entityId,
+          op: op,
+          payloadJson: '{}',
+          createdAt: DateTime.now(),
+        ),
+      );
 
   // ---- Statistiques (calcul dérivé, jamais stocké) ---------------------
 

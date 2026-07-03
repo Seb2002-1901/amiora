@@ -26,13 +26,13 @@ Deno.serve(async (_req) => {
   // Utilisateurs dont l'heure locale ≈ 09:00 (les réglages portent le fuseau).
   const { data: users, error: uErr } = await db
     .from("settings")
-    .select("user_id, timezone, notifications_enabled")
+    .select("user_id, extra, notifications_enabled")
     .eq("notifications_enabled", true);
   if (uErr) return json({ error: uErr.message }, 500);
 
   let sent = 0;
   for (const u of users ?? []) {
-    const localHour = hourIn(u.timezone ?? "Europe/Zurich", nowUtc);
+    const localHour = hourIn(u.extra?.timezone ?? "Europe/Zurich", nowUtc);
     if (localHour !== 9) continue; // 9 h locale (hors heures silencieuses par construction)
 
     const candidates = await buildCandidates(db, u.user_id);
@@ -152,12 +152,12 @@ async function sendPush(db: ReturnType<typeof adminClient>, c: Candidate) {
   // Jetons d'appareils de l'utilisateur.
   const { data: devices } = await db
     .from("devices")
-    .select("fcm_token")
+    .select("push_token")
     .eq("user_id", c.userId)
-    .not("fcm_token", "is", null);
+    .not("push_token", "is", null);
 
   for (const d of devices ?? []) {
-    await sendFcm(d.fcm_token, c.title, c.body).catch((e) =>
+    await sendFcm(d.push_token, c.title, c.body).catch((e) =>
       console.error("fcm", c.kind, String(e)),
     );
   }

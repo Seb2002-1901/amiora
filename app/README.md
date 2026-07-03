@@ -46,6 +46,37 @@ listes en `ListView.builder` (chargement progressif) · cache local
 SQLite/Drift (l'app fonctionne 100 % hors ligne, synchronisation
 silencieuse en arrière-plan).
 
+## Branchement des services réels (Phases 2 à 5)
+
+Tout le câblage est prêt et **gardé par configuration** : sans clé,
+l'application fonctionne en mode local intégral. À fournir (uniquement
+des valeurs PUBLIQUES — jamais de clé `service_role`, jamais de secret) :
+
+| Service | Valeur à fournir | Où elle va |
+|---|---|---|
+| Supabase | URL du projet (`https://xxxx.supabase.co`) | `--dart-define=SUPABASE_URL=…` |
+| Supabase | Clé `anon` (publique) | `--dart-define=SUPABASE_ANON_KEY=…` |
+| RevenueCat | Clé SDK publique iOS (`appl_…`) et Android (`goog_…`) | `--dart-define=REVENUECAT_API_KEY=…` (par flavor/plateforme) |
+| Firebase | `google-services.json` (Android) et `GoogleService-Info.plist` (iOS) | dossiers natifs + `--dart-define=AMIORA_FCM=true` |
+
+Côté serveur (à faire une fois les comptes créés — guides dans `supabase/README.md`) :
+
+1. `supabase db push` (joue les migrations, dont `memory_links`) ;
+2. activer les fournisseurs Apple / Google / e-mail (redirection OAuth :
+   `ch.amiora.app://login-callback`) ;
+3. déployer les 5 Edge Functions + secrets (`FCM_SERVICE_ACCOUNT_JSON`,
+   `RC_WEBHOOK_SECRET`) et planifier les crons ;
+4. RevenueCat : produits `5,99 CHF/mois` et `44,99 CHF/an` avec essai
+   14 jours, entitlement `premium`, webhook vers
+   `https://xxxx.supabase.co/functions/v1/revenuecat-webhook`.
+
+Comportements déjà câblés côté app : redirection de connexion quand le
+backend est configuré, synchronisation outbox → Supabase (débouncée 3 s
+après chaque mutation + périodique 5 min + à la connexion), tirage
+last-write-wins, restauration complète sur nouvel appareil, mode lecture
+seule piloté par l'entitlement RevenueCat (création bloquée, consultation/
+export intacts), enregistrement du jeton push dans `devices`.
+
 ## Tests
 
 ```bash

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'core/notifications/push_service.dart';
+import 'data/remote/supabase_service.dart';
+import 'data/subscription/subscription_service.dart';
 import 'demo/demo_overrides.dart';
 
 /// Environnement d'exécution, injecté à la compilation :
@@ -14,9 +17,13 @@ const bool amioraDemo = bool.fromEnvironment('AMIORA_DEMO');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // TODO(Phase 1): initialiser Supabase (SUPABASE_URL / SUPABASE_ANON_KEY),
-  // Firebase Messaging, RevenueCat et Sentry selon amioraEnv — le squelette
-  // démarre sans clé pour rester exécutable dès le premier build.
+  // Services gardés par configuration : sans clé, mode local intégral.
+  await SupabaseService.initIfConfigured();
+  await PushService.initIfConfigured();
+  await SubscriptionService.initIfConfigured(
+    appUserId: SupabaseService.userId,
+  );
+  // TODO(bêta) : Sentry (SENTRY_DSN) une fois le DSN fourni.
   runApp(
     ProviderScope(
       overrides: amioraDemo ? demoOverrides : const [],

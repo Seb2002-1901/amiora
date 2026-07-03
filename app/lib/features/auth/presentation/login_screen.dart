@@ -1,12 +1,205 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 
-import '../../common/placeholder_screen.dart';
+import '../../../core/errors/app_exception.dart';
+import '../../../core/layout/breakpoints.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../data/remote/auth_repository.dart';
+import '../../../data/remote/supabase_service.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
+    setState(() => _busy = true);
+    try {
+      await action();
+      if (mounted) context.go('/home');
+    } on AppException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const PlaceholderScreen(title: 'Connexion', phase: 1);
+    final theme = Theme.of(context);
+    final auth = ref.read(authRepositoryProvider);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.symmetric(
+                horizontal: context.gutter,
+                vertical: AmioraSpacing.x6,
+              ),
+              children: [
+                Center(
+                  child: Text(
+                    'AMIORA',
+                    style: theme.textTheme.titleLarge!.copyWith(
+                      color: AmioraColors.gold,
+                      letterSpacing: 6,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AmioraSpacing.x2),
+                Center(
+                  child: Text(
+                    'Heureux de te revoir.',
+                    style: theme.textTheme.bodyMedium!
+                        .copyWith(color: AmioraColors.text2),
+                  ),
+                ),
+                const SizedBox(height: AmioraSpacing.x6),
+                if (!SupabaseService.isConfigured) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AmioraSpacing.x4),
+                      child: Text(
+                        'Mode local : le compte en ligne sera activé quand '
+                        'le backend sera configuré. Tes données vivent sur '
+                        'cet appareil.',
+                        style: theme.textTheme.bodyMedium!
+                            .copyWith(color: AmioraColors.text2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x4),
+                  FilledButton(
+                    onPressed: () => context.go('/home'),
+                    child: const Text('Continuer en local'),
+                  ),
+                ] else ...[
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.apple, size: 22),
+                    label: const Text('Continuer avec Apple'),
+                    onPressed: _busy
+                        ? null
+                        : () => _run(
+                              () => auth
+                                  .signInWithProvider(OAuthProvider.apple),
+                            ),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x3),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.g_mobiledata, size: 28),
+                    label: const Text('Continuer avec Google'),
+                    onPressed: _busy
+                        ? null
+                        : () => _run(
+                              () => auth
+                                  .signInWithProvider(OAuthProvider.google),
+                            ),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x4),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AmioraSpacing.x3,
+                        ),
+                        child: Text(
+                          'ou',
+                          style: theme.textTheme.bodySmall!
+                              .copyWith(color: AmioraColors.text3),
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: AmioraSpacing.x4),
+                  TextField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    decoration: const InputDecoration(labelText: 'E-mail'),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x3),
+                  TextField(
+                    controller: _password,
+                    obscureText: true,
+                    decoration:
+                        const InputDecoration(labelText: 'Mot de passe'),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x4),
+                  FilledButton(
+                    onPressed: _busy
+                        ? null
+                        : () => _run(
+                              () => auth.signInWithEmail(
+                                email: _email.text.trim(),
+                                password: _password.text,
+                              ),
+                            ),
+                    child: _busy
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Se connecter'),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x3),
+                  Center(
+                    child: TextButton(
+                      onPressed: _busy || _email.text.trim().isEmpty
+                          ? null
+                          : () async {
+                              await auth.sendPasswordReset(_email.text.trim());
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'E-mail de réinitialisation envoyé.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                      child: const Text('Mot de passe oublié ?'),
+                    ),
+                  ),
+                  const SizedBox(height: AmioraSpacing.x2),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => context.go('/signup'),
+                      child: const Text('Créer un compte'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

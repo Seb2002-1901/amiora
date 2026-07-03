@@ -1,5 +1,12 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../data/remote/supabase_service.dart';
+import '../../features/common/access.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/signup_screen.dart';
@@ -24,6 +31,20 @@ import '../layout/adaptive_scaffold.dart';
 /// Quatre branches persistantes + « + » central modal.
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
+  refreshListenable: _AuthRefresh(),
+  // Mode connecté (Supabase configuré) : session exigée hors écrans
+  // d'entrée. Mode local : aucune redirection.
+  redirect: (context, state) {
+    if (!SupabaseService.isConfigured) return null;
+    const open = {'/splash', '/onboarding', '/login', '/signup'};
+    final loggedIn = SupabaseService.session != null;
+    final location = state.matchedLocation;
+    if (!loggedIn && !open.contains(location)) return '/login';
+    if (loggedIn && (location == '/login' || location == '/signup')) {
+      return '/home';
+    }
+    return null;
+  },
   routes: [
     GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
     GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
@@ -87,7 +108,25 @@ final GoRouter appRouter = GoRouter(
   // (session absente → /onboarding ; session présente → /home).
 );
 
-class _AppShell extends StatelessWidget {
+/// Rafraîchit le routeur quand l'état d'authentification change.
+class _AuthRefresh extends ChangeNotifier {
+  _AuthRefresh() {
+    if (SupabaseService.isConfigured) {
+      _sub = SupabaseService.client.auth.onAuthStateChange
+          .listen((_) => notifyListeners());
+    }
+  }
+
+  StreamSubscription<dynamic>? _sub;
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+}
+
+class _AppShell extends ConsumerWidget {
   const _AppShell({required this.shell});
 
   final StatefulNavigationShell shell;
@@ -116,7 +155,7 @@ class _AppShell extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AdaptiveScaffold(
       body: shell,
       selectedIndex: shell.currentIndex,
@@ -125,7 +164,9 @@ class _AppShell extends StatelessWidget {
         index,
         initialLocation: index == shell.currentIndex,
       ),
-      onCreatePressed: () => AddInteractionSheet.show(context),
+      onCreatePressed: () {
+        if (ensureWritable(context, ref)) AddInteractionSheet.show(context);
+      },
     );
   }
 }
