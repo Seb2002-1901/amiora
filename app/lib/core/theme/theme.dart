@@ -34,6 +34,7 @@ ThemeData buildAmioraTheme() {
 
   return ThemeData(
     useMaterial3: true,
+    fontFamily: 'Roboto',
     brightness: Brightness.dark,
     colorScheme: scheme,
     scaffoldBackgroundColor: AmioraColors.bg,
@@ -47,7 +48,7 @@ ThemeData buildAmioraTheme() {
       elevation: 0,
       centerTitle: false,
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: AmioraColors.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(

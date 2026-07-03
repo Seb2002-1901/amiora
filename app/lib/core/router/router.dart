@@ -47,7 +47,8 @@ final GoRouter appRouter = GoRouter(
               ),
               GoRoute(
                 path: ':id',
-                builder: (_, state) => const RelationshipDetailScreen(),
+                builder: (_, state) =>
+                    RelationshipDetailScreen(id: state.pathParameters['id']!),
               ),
             ],
           ),

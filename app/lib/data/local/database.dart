@@ -205,4 +205,102 @@ class AmioraDatabase extends _$AmioraDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  // ---- Relations -----------------------------------------------------
+
+  Stream<List<Relationship>> watchActiveRelationships() {
+    return (select(relationships)
+          ..where((r) => r.deletedAt.isNull() & r.status.equals('active'))
+          ..orderBy([(r) => OrderingTerm.asc(r.firstName)]))
+        .watch();
+  }
+
+  Future<Relationship?> relationshipById(String id) =>
+      (select(relationships)..where((r) => r.id.equals(id))).getSingleOrNull();
+
+  Future<void> insertRelationship(RelationshipsCompanion entry) =>
+      into(relationships).insert(entry);
+
+  Future<void> setRelationshipStatus(String id, String status) =>
+      (update(relationships)..where((r) => r.id.equals(id))).write(
+        RelationshipsCompanion(
+          status: Value(status),
+          archivedAt: Value(status == 'active' ? null : DateTime.now()),
+        ),
+      );
+
+  // ---- Interactions (le geste central) -------------------------------
+
+  /// Insère une interaction et ses participants en une transaction.
+  Future<void> insertInteraction(
+    InteractionsCompanion entry,
+    List<String> relationshipIds,
+  ) {
+    return transaction(() async {
+      await into(interactions).insert(entry);
+      for (final relId in relationshipIds) {
+        await into(interactionParticipants).insert(
+          InteractionParticipantsCompanion.insert(
+            interactionId: entry.id.value,
+            relationshipId: relId,
+          ),
+        );
+      }
+    });
+  }
+
+  /// Interactions (vivantes) d'une relation, plus récentes d'abord.
+  Future<List<Interaction>> interactionsForRelationship(String relId) {
+    final query = select(interactions).join([
+      innerJoin(
+        interactionParticipants,
+        interactionParticipants.interactionId.equalsExp(interactions.id),
+      ),
+    ])
+      ..where(
+        interactionParticipants.relationshipId.equals(relId) &
+            interactions.deletedAt.isNull() &
+            interactionParticipants.deletedAt.isNull(),
+      )
+      ..orderBy([OrderingTerm.desc(interactions.occurredAt)]);
+    return query.map((row) => row.readTable(interactions)).get();
+  }
+
+  // ---- Données du calcul de l'Indice ---------------------------------
+
+  Future<List<Memory>> memoriesForRelationship(String relId) {
+    final query = select(memories).join([
+      innerJoin(memoryLinks, memoryLinks.memoryId.equalsExp(memories.id)),
+    ])
+      ..where(
+        memoryLinks.relationshipId.equals(relId) &
+            memories.deletedAt.isNull() &
+            memoryLinks.deletedAt.isNull(),
+      );
+    return query.map((row) => row.readTable(memories)).get();
+  }
+
+  Future<List<Promise>> promisesForRelationship(String relId) =>
+      (select(promises)
+            ..where(
+              (p) => p.relationshipId.equals(relId) & p.deletedAt.isNull(),
+            ))
+          .get();
+
+  Future<List<ImportantDate>> importantDatesForRelationship(String relId) =>
+      (select(importantDates)
+            ..where(
+              (d) => d.relationshipId.equals(relId) & d.deletedAt.isNull(),
+            ))
+          .get();
+
+  Future<PresenceSnapshot?> lastSnapshotFor(String relId) =>
+      (select(presenceSnapshots)
+            ..where((s) => s.relationshipId.equals(relId))
+            ..orderBy([(s) => OrderingTerm.desc(s.date)])
+            ..limit(1))
+          .getSingleOrNull();
+
+  Future<void> upsertSnapshot(PresenceSnapshotsCompanion entry) =>
+      into(presenceSnapshots).insertOnConflictUpdate(entry);
 }

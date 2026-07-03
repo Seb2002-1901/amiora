@@ -31,10 +31,10 @@ Ce qui se vérifie dans le dépôt est fait ; ce qui exige un poste de développ
 
 | Critère GO Bêta | État | Prochaine action |
 |---|---|---|
-| Toutes les maquettes existent | ✅ | — (25 écrans + 6 états + responsive) |
-| L'application compile sur iOS et Android | 🔲 À vérifier sur poste | `flutter create --platforms ios,android . && flutter pub get && dart run build_runner build && flutter test` dans `app/` |
-| Aucune erreur responsive détectée | 🟡 Règles + aperçus livrés | Exécuter les tests widget sur les 6 gabarits (`TestDevices.all`) une fois les écrans réels construits |
-| Geste « Ajouter une interaction » < 10 s | 🟡 Prototype prêt | Mener les 5-10 tests chronométrés (protocole livrable 2) |
+| Toutes les maquettes existent | ✅ | — (25 écrans + 6 états + responsive + captures réelles de l'app) |
+| L'application compile sur iOS et Android | 🟡 Code vérifié | `flutter analyze` : 0 erreur · 16 tests verts · build web réussi · app exécutée en navigateur (captures/). Builds device à confirmer sur poste avec Xcode/Android SDK |
+| Aucune erreur responsive détectée | ✅ Vérifié | Test widget de la coquille sur les 6 gabarits (`TestDevices.all`) vert + captures réelles aux 6 tailles (`captures/`) |
+| Geste « Ajouter une interaction » < 10 s | 🟡 Fonctionne de bout en bout | Création → sauvegarde locale → recalcul de l'Indice testés sur SQLite réel (`core_gesture_test.dart`) ; les 5-10 chronométrages humains restent à mener |
 | Authentification fonctionne | 🔲 Phase 1 | Créer les projets Supabase (dev/staging/prod), activer Apple/Google/e-mail, câbler `main.dart` |
 | Synchronisation fonctionne | 🔲 Phase 1 | Implémenter la boucle outbox → Supabase (architecture § 4) |
 | Notifications fonctionnent | 🔲 Phase 3 | Déployer `daily-notifications` + FCM, tester sur appareils |

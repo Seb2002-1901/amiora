@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/tokens.dart';
 
-/// Splash : logo et slogan, puis redirection vers l'onboarding
-/// (Phase 1 : redirection selon l'état d'authentification).
+/// Splash : logo et slogan, puis entrée dans l'application.
+/// (Phase 1 : redirection selon l'état d'authentification Supabase.)
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -16,8 +16,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(AmioraDurations.expressive * 3, () {
-      if (mounted) context.go('/onboarding');
+    Future<void>.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) context.go('/home');
     });
   }
 

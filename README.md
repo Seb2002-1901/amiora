@@ -4,7 +4,7 @@
 
 AMIORA est un projet d'application mobile qui aide chacun à entretenir ses relations importantes — partenaire, famille, amis — pour éviter qu'elles ne se dégradent par négligence. L'application se veut la mémoire de tes relations : elle retient les proches, les souvenirs, les promesses, les dates importantes et le temps passé ensemble, puis propose de petites attentions quotidiennes pour rester présent.
 
-> **État du projet.** Sprint 0 livré : spécifications finalisées, maquettes haute fidélité, projet Flutter initialisé (Indice de présence implémenté et testé), backend Supabase structuré (migration + Edge Functions), projets juridiques rédigés. Prochaine étape : phases 1 à 6 du PRD sur poste de développement, jusqu'à la bêta privée. Suivi : [docs/sprint-0/README.md](docs/sprint-0/README.md).
+> **État du projet.** L'application **tourne** : accueil, relations, fiche et geste central « Ajouter une interaction » fonctionnent de bout en bout sur la base locale (SQLite/Drift) avec recalcul immédiat de l'Indice de présence — 16 tests verts, `flutter analyze` sans erreur, build web vérifié en navigateur réel sur les 6 gabarits (`captures/`). Backend Supabase structuré (migration + 5 Edge Functions), maquettes et juridique livrés. Restent : builds device (Xcode/Android SDK), connexion Supabase/RevenueCat (phases 1 et 5 du PRD), tests utilisateurs chronométrés, bêta privée. Suivi : [docs/sprint-0/README.md](docs/sprint-0/README.md).
 
 ## Documents de référence
 
