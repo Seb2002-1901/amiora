@@ -48,6 +48,24 @@ for (const d of DEVICES) {
   await ctx.close();
 }
 
+// Nouveaux écrans de la Phase 1 sur le gabarit standard.
+{
+  const ctx = await newCtx({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  for (const [route, file] of [
+    ['/memories', 'souvenirs-393'],
+    ['/promises', 'promesses-393'],
+    ['/calendar', 'calendrier-393'],
+    ['/profile/statistics', 'statistiques-393'],
+    ['/profile', 'profil-393'],
+    ['/profile/settings', 'parametres-393'],
+    ['/paywall', 'premium-393'],
+  ]) {
+    await shot(page, route, file);
+  }
+  await ctx.close();
+}
+
 // Fiche relation (Papa) et geste central sur le gabarit standard.
 const ctx = await newCtx({
   viewport: { width: 393, height: 852 },

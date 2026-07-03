@@ -44,3 +44,39 @@ final relationshipProvider =
   ref.watch(dbTickProvider);
   return ref.watch(databaseProvider).relationshipById(id);
 });
+
+/// Souvenirs (tous, plus récents d'abord).
+final memoriesProvider = StreamProvider<List<Memory>>(
+  (ref) => ref.watch(databaseProvider).watchMemories(),
+);
+
+/// Promesses (tous statuts, tri par échéance).
+final promisesProvider = StreamProvider<List<Promise>>(
+  (ref) => ref.watch(databaseProvider).watchPromises(),
+);
+
+/// Relations « En mémoire ».
+final inMemoriamProvider = StreamProvider<List<Relationship>>(
+  (ref) => ref.watch(databaseProvider).watchInMemoriam(),
+);
+
+/// Statistiques de l'année en cours (calcul dérivé — jamais stocké).
+final yearStatsProvider =
+    FutureProvider<({Map<String, int> byType, int minutes, int memories})>(
+        (ref) async {
+  ref.watch(dbTickProvider);
+  final db = ref.watch(databaseProvider);
+  final from = DateTime(DateTime.now().year);
+  final (byType, minutes) = await db.interactionStatsSince(from);
+  final memories = await db.memoriesCountSince(from);
+  return (byType: byType, minutes: minutes, memories: memories);
+});
+
+/// Réglage booléen persisté (notifications, biométrie, analytics…).
+final boolSettingProvider =
+    FutureProvider.family<bool, (String, bool)>((ref, arg) async {
+  ref.watch(dbTickProvider);
+  final (key, defaultValue) = arg;
+  final raw = await ref.watch(databaseProvider).settingValue(key);
+  return raw == null ? defaultValue : raw == 'true';
+});

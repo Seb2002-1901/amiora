@@ -294,6 +294,110 @@ class AmioraDatabase extends _$AmioraDatabase {
             ))
           .get();
 
+  // ---- Souvenirs ------------------------------------------------------
+
+  /// Souvenirs vivants, plus récents d'abord.
+  Stream<List<Memory>> watchMemories() {
+    return (select(memories)
+          ..where((m) => m.deletedAt.isNull())
+          ..orderBy([(m) => OrderingTerm.desc(m.createdAt)]))
+        .watch();
+  }
+
+  Future<void> insertMemory(
+    MemoriesCompanion entry,
+    List<String> relationshipIds,
+  ) {
+    return transaction(() async {
+      await into(memories).insert(entry);
+      for (final relId in relationshipIds) {
+        await into(memoryLinks).insert(
+          MemoryLinksCompanion.insert(
+            memoryId: entry.id.value,
+            relationshipId: relId,
+          ),
+        );
+      }
+    });
+  }
+
+  // ---- Promesses -------------------------------------------------------
+
+  Stream<List<Promise>> watchPromises() {
+    return (select(promises)
+          ..where((p) => p.deletedAt.isNull())
+          ..orderBy([
+            (p) => OrderingTerm.asc(p.dueDate),
+            (p) => OrderingTerm.asc(p.title),
+          ]))
+        .watch();
+  }
+
+  Future<void> insertPromise(PromisesCompanion entry) =>
+      into(promises).insert(entry);
+
+  Future<void> setPromiseStatus(String id, String status) =>
+      (update(promises)..where((p) => p.id.equals(id)))
+          .write(PromisesCompanion(status: Value(status)));
+
+  Future<void> softDeletePromise(String id) =>
+      (update(promises)..where((p) => p.id.equals(id)))
+          .write(PromisesCompanion(deletedAt: Value(DateTime.now())));
+
+  // ---- Statistiques (calcul dérivé, jamais stocké) ---------------------
+
+  /// Compte des interactions par type et minutes cumulées depuis [from].
+  Future<(Map<String, int>, int)> interactionStatsSince(DateTime from) async {
+    final rows = await (select(interactions)
+          ..where(
+            (i) =>
+                i.deletedAt.isNull() &
+                i.occurredAt.isBiggerOrEqualValue(from),
+          ))
+        .get();
+    final byType = <String, int>{};
+    var minutes = 0;
+    for (final i in rows) {
+      byType[i.type] = (byType[i.type] ?? 0) + 1;
+      minutes += i.durationMinutes ?? 0;
+    }
+    return (byType, minutes);
+  }
+
+  Future<int> memoriesCountSince(DateTime from) async {
+    final rows = await (select(memories)
+          ..where(
+            (m) =>
+                m.deletedAt.isNull() & m.createdAt.isBiggerOrEqualValue(from),
+          ))
+        .get();
+    return rows.length;
+  }
+
+  // ---- En mémoire ------------------------------------------------------
+
+  Stream<List<Relationship>> watchInMemoriam() {
+    return (select(relationships)
+          ..where(
+            (r) => r.deletedAt.isNull() & r.status.equals('in_memoriam'),
+          )
+          ..orderBy([(r) => OrderingTerm.asc(r.firstName)]))
+        .watch();
+  }
+
+  // ---- Réglages (clé/valeur JSON) --------------------------------------
+
+  Future<String?> settingValue(String key) async {
+    final row = await (select(appSettings)..where((s) => s.key.equals(key)))
+        .getSingleOrNull();
+    return row?.valueJson;
+  }
+
+  Future<void> setSetting(String key, String valueJson) =>
+      into(appSettings).insertOnConflictUpdate(
+        AppSettingsCompanion.insert(key: key, valueJson: valueJson),
+      );
+
   Future<PresenceSnapshot?> lastSnapshotFor(String relId) =>
       (select(presenceSnapshots)
             ..where((s) => s.relationshipId.equals(relId))

@@ -15,6 +15,58 @@ class RelationshipDetailScreen extends ConsumerWidget {
 
   final String id;
 
+  /// Cycle de vie d'une relation : l'archivage est proposé avant toute
+  /// suppression (maquette état F) ; « En mémoire » gèle score et rappels.
+  Future<void> _showLifecycleSheet(BuildContext context, WidgetRef ref) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AmioraSpacing.x4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Que souhaites-tu faire ?',
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AmioraSpacing.x2),
+              Text(
+                'Archiver met la relation en pause, sans rappels. '
+                '« En mémoire » conserve son histoire pour toujours.',
+                style: Theme.of(sheetContext)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(color: AmioraColors.text2),
+              ),
+              const SizedBox(height: AmioraSpacing.x4),
+              OutlinedButton(
+                onPressed: () => Navigator.of(sheetContext).pop('archived'),
+                child: const Text('Archiver'),
+              ),
+              const SizedBox(height: AmioraSpacing.x2),
+              OutlinedButton(
+                onPressed: () =>
+                    Navigator.of(sheetContext).pop('in_memoriam'),
+                child: const Text('Mettre en mémoire'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                child: const Text('Annuler'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (action != null) {
+      await ref.read(databaseProvider).setRelationshipStatus(id, action);
+      ref.read(dbTickProvider.notifier).state++;
+      if (context.mounted) context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final relationship = ref.watch(relationshipProvider(id));
@@ -179,14 +231,8 @@ class RelationshipDetailScreen extends ConsumerWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: AmioraColors.text3,
                   ),
-                  onPressed: () async {
-                    await ref
-                        .read(databaseProvider)
-                        .setRelationshipStatus(id, 'archived');
-                    ref.read(dbTickProvider.notifier).state++;
-                    if (context.mounted) context.pop();
-                  },
-                  child: const Text('Archiver la relation'),
+                  onPressed: () => _showLifecycleSheet(context, ref),
+                  child: const Text('Archiver ou mettre en mémoire'),
                 ),
               ),
             ],

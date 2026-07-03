@@ -74,6 +74,57 @@ void main() {
     expect(await repo.computeAll(today), isEmpty);
   });
 
+  test('Souvenirs et promesses alimentent les composantes S et Pc', () async {
+    final today = DateTime(2026, 7, 3);
+    await db.insertRelationship(
+      RelationshipsCompanion.insert(
+        id: 'maman',
+        firstName: 'Maman',
+        category: 'family',
+        cadenceDays: 7,
+        createdAt: DateTime(2024, 1, 1),
+      ),
+    );
+    await db.insertInteraction(
+      InteractionsCompanion.insert(id: 'i0', type: 'call', occurredAt: today),
+      ['maman'],
+    );
+
+    final before = (await repo.computeAll(today))['maman']! as PresenceScore;
+    expect(before.components.memories, 0.0);
+    expect(before.components.promises, 0.7); // neutre sans promesse échue
+
+    // Un souvenir lié → S progresse.
+    await db.insertMemory(
+      MemoriesCompanion.insert(
+        id: 'm1',
+        type: 'note',
+        createdAt: today,
+      ),
+      ['maman'],
+    );
+    // Une promesse échue et tenue → Pc = 1.
+    await db.insertPromise(
+      PromisesCompanion.insert(
+        id: 'pr1',
+        relationshipId: 'maman',
+        title: 'Aller marcher ensemble',
+        dueDate: Value(today.subtract(const Duration(days: 2))),
+      ),
+    );
+    await db.setPromiseStatus('pr1', 'done');
+
+    final after = (await repo.computeAll(today))['maman']! as PresenceScore;
+    expect(after.components.memories, closeTo(1 / 3, 1e-9));
+    expect(after.components.promises, 1.0);
+    expect(after.display, greaterThan(before.display));
+
+    // « En mémoire » : sort du calcul, souvenirs préservés.
+    await db.setRelationshipStatus('maman', 'in_memoriam');
+    expect(await repo.computeAll(today), isEmpty);
+    expect(await db.memoriesForRelationship('maman'), hasLength(1));
+  });
+
   test('Une interaction multi-personnes crédite chaque relation', () async {
     for (final id in ['emma', 'julie']) {
       await db.insertRelationship(

@@ -79,7 +79,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/paywall', builder: (_, __) => const PaywallScreen()),
     GoRoute(
       path: '/in-memoriam/:id',
-      builder: (_, state) => const InMemoriamScreen(),
+      builder: (_, state) =>
+          InMemoriamScreen(id: state.pathParameters['id']),
     ),
   ],
   // TODO(Phase 1): redirect selon l'état d'authentification Supabase

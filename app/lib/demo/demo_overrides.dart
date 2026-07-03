@@ -10,6 +10,59 @@ import '../data/app_providers.dart';
 import '../data/local/database.dart';
 import '../domain/presence/presence_score.dart';
 
+final _memories = <Memory>[
+  Memory(
+    id: 'mem1',
+    type: 'note',
+    title: 'Papa m’a raconté son enfance',
+    body: 'Le village, l’école à vélo, le premier travail à 16 ans.',
+    createdAt: _now.subtract(const Duration(days: 4)),
+  ),
+  Memory(
+    id: 'mem2',
+    type: 'photo',
+    title: 'Balade au bord du lac avec Emma',
+    createdAt: _now.subtract(const Duration(days: 12)),
+  ),
+  Memory(
+    id: 'mem3',
+    type: 'note',
+    title: 'Grand-maman et sa recette de gâteau',
+    body: 'Elle m’a enfin donné le secret : le zeste de citron.',
+    createdAt: _now.subtract(const Duration(days: 41)),
+  ),
+];
+
+final _promises = <Promise>[
+  Promise(
+    id: 'pro1',
+    relationshipId: 'grandmaman',
+    title: 'Aller voir Grand-maman dimanche',
+    status: 'todo',
+    dueDate: _now.add(const Duration(days: 3)),
+  ),
+  Promise(
+    id: 'pro2',
+    relationshipId: 'emma',
+    title: 'Organiser un week-end à deux',
+    status: 'todo',
+    dueDate: _now.add(const Duration(days: 20)),
+  ),
+  Promise(
+    id: 'pro3',
+    relationshipId: 'papa',
+    title: 'Appeler papa cette semaine',
+    status: 'in_progress',
+  ),
+  Promise(
+    id: 'pro4',
+    relationshipId: 'emma',
+    title: 'Réserver le restaurant italien',
+    status: 'done',
+    dueDate: _now.subtract(const Duration(days: 6)),
+  ),
+];
+
 final _now = DateTime.now();
 
 Relationship _rel(
@@ -99,4 +152,17 @@ final demoOverrides = <Override>[
     }
     return null;
   }),
+  memoriesProvider.overrideWith((ref) => Stream.value(_memories)),
+  promisesProvider.overrideWith((ref) => Stream.value(_promises)),
+  inMemoriamProvider.overrideWith((ref) => Stream.value(const [])),
+  yearStatsProvider.overrideWith(
+    (ref) async => (
+      byType: const {
+        'call': 214, 'outing': 31, 'meal': 12, 'trip': 8, 'visit': 26,
+      },
+      minutes: 284 * 60,
+      memories: 63,
+    ),
+  ),
+  boolSettingProvider.overrideWith((ref, arg) async => arg.$2),
 ];
