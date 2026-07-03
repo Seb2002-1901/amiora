@@ -1,0 +1,89 @@
+# Intégration continue AMIORA — preuves d'exécution reproductibles à chaque
+# poussée : analyse statique, suite de tests complète (formule de l'Indice,
+# geste central de bout en bout, synchronisation, responsive 6 gabarits),
+# build web, et APK Android debug installable en artefact.
+#
+# Le bloc `hooks:` du pubspec (liaison sqlite3 système) n'existe que pour
+# l'environnement de développement derrière proxy : ici, les binaires
+# précompilés officiels se téléchargent normalement — on retire le bloc.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  qualite:
+    name: Analyse · tests · web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Retirer la liaison sqlite3 système (spécifique proxy dev)
+        run: sed -i '/^# Environnement CI derrière proxy/,$d' pubspec.yaml
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build web --release --dart-define=AMIORA_DEMO=true
+
+  apk-debug:
+    name: APK Android (debug, installable)
+    runs-on: ubuntu-latest
+    needs: qualite
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Retirer la liaison sqlite3 système (spécifique proxy dev)
+        run: sed -i '/^# Environnement CI derrière proxy/,$d' pubspec.yaml
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Générer le dossier Android (non versionné)
+        run: flutter create --platforms android --project-name amiora --org ch.amiora .
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amiora-apk-debug
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30
+
+  # Compilation iOS (sans signature) : à déclencher manuellement — les
+  # minutes macOS sont facturées plus cher sur dépôt privé.
+  ios-compilation:
+    name: Compilation iOS (sans signature)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Retirer la liaison sqlite3 système (spécifique proxy dev)
+        run: sed -i '' '/^# Environnement CI derrière proxy/,$d' pubspec.yaml
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Générer le dossier iOS (non versionné)
+        run: flutter create --platforms ios --project-name amiora --org ch.amiora .
+      - run: flutter build ios --no-codesign --debug
