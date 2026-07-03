@@ -459,6 +459,32 @@ L'application est conçue nativement pour l'ensemble du parc iOS et Android (et 
 
 Chaque écran doit être vérifié sur les six gabarits avant d'être déclaré terminé — aucun élément coupé, aucun débordement, aucun scroll cassé. Les aperçus multi-appareils sont maintenus dans `maquettes/03-apercus-responsive.html`.
 
+### 9.4 Matrice d'états par écran
+
+Un écran n'est « terminé » que lorsque ses **dix états** sont conçus et vérifiés :
+
+| # | État | Exigence |
+|---|---|---|
+| 1 | Normal | Conforme à la maquette |
+| 2 | Chargement | Skeletons (§ 5.15), jamais de spinner plein écran |
+| 3 | Vide | Illustration au trait + titre + action (§ 5.14) |
+| 4 | Erreur | Ton calme + « Réessayer » (§ 5.16) |
+| 5 | Hors ligne | Bandeau discret, fonctionnalité maintenue (§ 5.17) |
+| 6 | Lecture seule | Création désactivée, consultation/export intacts, rien d'anxiogène |
+| 7 | Très peu de données | 1 relation, 0 souvenir — l'écran doit rester engageant |
+| 8 | Beaucoup de données | 50+ relations, 1 000+ souvenirs — listes virtualisées, pas de ralenti |
+| 9 | Petit écran | Gabarits 360 et 375 sans débordement |
+| 10 | Grand écran | 430/412 sans vide gênant ; 834 propre (rail + 600 dp) |
+
+### 9.5 Budgets de performance
+
+**60 FPS minimum** (aucune animation > 16 ms/frame) · démarrage à chaud < 2 s ·
+transitions 150-350 ms · images compressées avant upload (~2048 px / ~400 Ko)
++ miniatures 400 px · listes en chargement progressif (`ListView.builder`) ·
+cache local intégral (SQLite/Drift — l'app vit hors ligne) · synchronisation
+silencieuse en arrière-plan, jamais d'écran bloquant « synchronisation… » ·
+mémoire maîtrisée (pas d'images pleine résolution en liste).
+
 ---
 
 ## Annexe — Récapitulatif des tokens non chromatiques
