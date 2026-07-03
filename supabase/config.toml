@@ -1,0 +1,41 @@
+# Configuration Supabase CLI — développement local.
+# Production : projets distincts dev / staging / prod, région eu-central-2
+# (Zurich), repli eu-central-1 (Francfort). Voir README.md.
+project_id = "amiora"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+# Apple / Google : renseigner les identifiants via `supabase secrets set`
+# et l'interface du projet — jamais de secret dans ce fichier.
+# [auth.external.apple]
+# enabled = true
+# [auth.external.google]
+# enabled = true
+
+[storage]
+enabled = true
+file_size_limit = "15MiB"
+
+[edge_runtime]
+enabled = true
