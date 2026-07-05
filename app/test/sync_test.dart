@@ -1,5 +1,7 @@
 // Synchronisation (Phase 3) : la file outbox journalise chaque mutation
 // dans l'ordre, et reste intacte en mode local (aucun backend configuré).
+import 'dart:convert';
+
 import 'package:amiora/data/local/database.dart';
 import 'package:amiora/data/sync/sync_service.dart';
 import 'package:drift/drift.dart' show Value;
@@ -93,5 +95,46 @@ void main() {
     expect(a, b);
     expect(a, isNot(c));
     expect(a, matches(RegExp(r'^[0-9a-f-]{36}$')));
+  });
+
+  test('restore() écrit un curseur au même format que le tirage (jsonEncode)',
+      () async {
+    await SyncService(db).restore();
+    final raw = await db.settingValue('sync_last_pulled_at');
+    expect(raw, isNotNull);
+    // Le tirage relit le curseur via jsonDecode : le format doit coïncider.
+    final decoded = jsonDecode(raw!) as String;
+    expect(DateTime.parse(decoded), DateTime.utc(1970));
+  });
+
+  test('La charge utile d’un souvenir pousse created_at (chronologie)',
+      () async {
+    await db.insertMemory(
+      MemoriesCompanion.insert(
+        id: 'm1',
+        type: 'note',
+        body: const Value('Souvenir'),
+        createdAt: DateTime.utc(2026, 7, 3),
+      ),
+      const [],
+    );
+    final row = await (db.select(db.memories)
+          ..where((m) => m.id.equals('m1')))
+        .getSingle();
+    final payload = SyncService(db).debugMapMemory(row, const []);
+    expect(
+      payload['created_at'],
+      DateTime.utc(2026, 7, 3).toIso8601String(),
+    );
+  });
+
+  test('Une entité outbox inconnue lève une erreur franche (StateError)',
+      () async {
+    await db.journalMutation('inconnue', 'x-1', 'create');
+    final op = await db.select(db.outbox).getSingle();
+    await expectLater(
+      SyncService(db).debugPushOne(op),
+      throwsStateError,
+    );
   });
 }

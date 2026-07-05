@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -22,19 +23,49 @@ class SyncService {
 
   final AmioraDatabase _db;
   bool _running = false;
+  bool _rerunRequested = false;
 
   static const _lastPullKey = 'sync_last_pulled_at';
+
+  /// Seuil d'alerte : au-delà, l'entrée outbox est signalée à chaque cycle
+  /// (jamais supprimée — aucune perte silencieuse de mutation).
+  static const _stuckAttempts = 20;
+
+  /// Clés de réglages notifications répliquées vers le serveur.
+  static const _notifKeys = ['notif_birthdays', 'notif_attention', 'notif_weekly'];
 
   Future<({int pushed, int pulled})> synchronize() async {
     if (!SupabaseService.isConfigured || SupabaseService.userId == null) {
       return (pushed: 0, pulled: 0);
     }
-    if (_running) return (pushed: 0, pulled: 0);
+    if (_running) {
+      // Une passe est en vol : on note la demande plutôt que de la jeter
+      // (sinon la mutation attendrait le prochain déclenchement périodique).
+      _rerunRequested = true;
+      return (pushed: 0, pulled: 0);
+    }
     _running = true;
+    var pushed = 0;
+    var pulled = 0;
     try {
-      final pushed = await _push();
-      final pulled = await _pull();
-      await _pushSettings();
+      // Boucle bornée : une seule relance par vague de demandes reçues
+      // pendant la passe en cours (pas de récursion).
+      do {
+        _rerunRequested = false;
+        pushed += await _push();
+        // Hors ligne : aucune exception ne doit fuir (même contrat que
+        // _push, qui absorbe déjà les erreurs réseau).
+        try {
+          pulled += await _pull();
+        } catch (e) {
+          Log.warning('sync_pull_failed $e');
+        }
+        try {
+          await _pushSettings();
+        } catch (e) {
+          Log.warning('sync_push_settings_failed $e');
+        }
+      } while (_rerunRequested);
       if (pushed > 0 || pulled > 0) {
         Log.info('sync_completed pushed=$pushed pulled=$pulled');
       }
@@ -46,9 +77,10 @@ class SyncService {
 
   /// Restauration complète (nouvel appareil, réinstallation).
   Future<void> restore() async {
+    // Même format que le curseur écrit en fin de _pull (jsonEncode).
     await _db.setSetting(
       _lastPullKey,
-      DateTime.utc(1970).toIso8601String(),
+      jsonEncode(DateTime.utc(1970).toIso8601String()),
     );
     await synchronize();
   }
@@ -61,6 +93,9 @@ class SyncService {
         .get();
     var pushed = 0;
     for (final op in pending) {
+      if (op.attempts >= _stuckAttempts) {
+        Log.error('sync_push_stuck entity=${op.entity} attempts=${op.attempts}');
+      }
       try {
         await _pushOne(op);
         await (_db.delete(_db.outbox)..where((o) => o.seq.equals(op.seq)))
@@ -79,7 +114,8 @@ class SyncService {
   }
 
   Future<void> _pushOne(OutboxData op) async {
-    final sb = SupabaseService.client;
+    // Paresseux : le client n'est sollicité qu'une fois l'entité reconnue.
+    late final sb = SupabaseService.client;
     switch (op.entity) {
       case 'relationships':
         final row = await (_db.select(_db.relationships)
@@ -142,7 +178,9 @@ class SyncService {
         if (row == null) return;
         await sb.from('important_dates').upsert(_mapImportantDate(row));
       default:
-        Log.warning('sync_push_unknown_entity ${op.entity}');
+        // Erreur franche plutôt qu'une évacuation silencieuse : l'entrée
+        // reste dans la file et son compteur d'essais la rend visible.
+        throw StateError('entité outbox inconnue: ${op.entity}');
     }
   }
 
@@ -163,21 +201,52 @@ class SyncService {
       for (final o in await _db.select(_db.outbox).get()) o.entityId,
     };
 
+    // Re-vérification à l'instant T, dans la transaction d'application :
+    // une mutation locale journalisée PENDANT le tirage prime sur l'écho
+    // serveur (elle sera poussée au prochain cycle).
+    Future<bool> applyUnlessPending(
+      String id,
+      Future<void> Function() apply,
+    ) {
+      return _db.transaction(() async {
+        final pending = await (_db.select(_db.outbox)
+              ..where((o) => o.entityId.equals(id))
+              ..limit(1))
+            .get();
+        if (pending.isNotEmpty) return false;
+        await apply();
+        return true;
+      });
+    }
+
+    // Tirage paginé : PostgREST plafonne chaque réponse à 1000 lignes.
+    // Chaque table est épuisée page par page (tri stable updated_at puis
+    // id) ; `gte` peut renvoyer des doublons de bord, sans effet car
+    // l'application est idempotente (insertOnConflictUpdate).
+    const pageSize = 1000;
     Future<void> pullTable(
       String table,
       Future<void> Function(Map<String, dynamic> row) apply,
     ) async {
-      final rows = await sb
-          .from(table)
-          .select()
-          .gt('updated_at', since.toIso8601String())
-          .order('updated_at', ascending: true);
-      for (final row in rows) {
-        final updatedAt = DateTime.parse(row['updated_at'] as String);
-        if (updatedAt.isAfter(maxSeen)) maxSeen = updatedAt;
-        if (pendingIds.contains(row['id'])) continue;
-        await apply(row);
-        applied++;
+      var offset = 0;
+      while (true) {
+        final rows = await sb
+            .from(table)
+            .select()
+            .gte('updated_at', since.toIso8601String())
+            .order('updated_at', ascending: true)
+            .order('id', ascending: true)
+            .range(offset, offset + pageSize - 1);
+        for (final row in rows) {
+          final updatedAt = DateTime.parse(row['updated_at'] as String);
+          if (updatedAt.isAfter(maxSeen)) maxSeen = updatedAt;
+          if (pendingIds.contains(row['id'])) continue;
+          if (await applyUnlessPending(row['id'] as String, () => apply(row))) {
+            applied++;
+          }
+        }
+        if (rows.length < pageSize) break;
+        offset += pageSize;
       }
     }
 
@@ -191,6 +260,7 @@ class SyncService {
               status: Value(r['status'] as String),
               cadenceDays: r['expected_cadence_days'] as int,
               createdAt: DateTime.parse(r['created_at'] as String),
+              archivedAt: Value(_timeOrNull(r['archived_at'])),
               birthday: Value(_dateOrNull(r['birthday'])),
               phone: Value(r['phone'] as String?),
               email: Value(r['email'] as String?),
@@ -278,31 +348,59 @@ class SyncService {
           );
     });
 
+    await _pullSettings();
+
+    // Le curseur global n'avance qu'une fois TOUTES les tables épuisées :
+    // aucune ligne située après une page tronquée ne peut être perdue.
     await _db.setSetting(_lastPullKey, jsonEncode(maxSeen.toIso8601String()));
     return applied;
   }
 
   // ---- Réglages (moteur de notifications serveur) -----------------------
 
-  Future<void> _pushSettings() async {
-    final birthdays = await _boolSetting('notif_birthdays', true);
-    final attention = await _boolSetting('notif_attention', true);
-    final weekly = await _boolSetting('notif_weekly', false);
-    await SupabaseService.client.from('settings').upsert({
-      'user_id': SupabaseService.userId,
-      'notifications_enabled': birthdays || attention || weekly,
-      'extra': {
-        'timezone': DateTime.now().timeZoneName,
-        'notif_birthdays': birthdays,
-        'notif_attention': attention,
-        'notif_weekly': weekly,
-      },
-    });
+  /// Rapatrie les réglages serveur ABSENTS de la table locale : le réglage
+  /// local explicite garde priorité (il sera poussé par [_pushSettings]).
+  Future<void> _pullSettings() async {
+    final row = await SupabaseService.client
+        .from('settings')
+        .select('extra')
+        .maybeSingle();
+    final extra = row?['extra'];
+    if (extra is! Map<String, dynamic>) return;
+    for (final entry in extra.entries) {
+      final value = entry.value;
+      if (value is! bool) continue; // champs techniques (fuseau…) ignorés
+      if (await _db.settingValue(entry.key) != null) continue;
+      await _db.setSetting(entry.key, value ? 'true' : 'false');
+    }
   }
 
-  Future<bool> _boolSetting(String key, bool fallback) async {
-    final raw = await _db.settingValue(key);
-    return raw == null ? fallback : raw == 'true';
+  Future<void> _pushSettings() async {
+    // Seules les clés explicitement réglées localement sont poussées :
+    // un appareil neuf n'écrase pas les préférences serveur avec des
+    // valeurs par défaut.
+    final extra = <String, Object>{};
+    for (final key in _notifKeys) {
+      final raw = await _db.settingValue(key);
+      if (raw != null) extra[key] = raw == 'true';
+    }
+    // timeZoneName est souvent une abréviation (« CEST ») inexploitable :
+    // seul un identifiant IANA (contient '/') est envoyé tel quel ; sinon
+    // le décalage en minutes sert de repli au moteur de notifications.
+    final now = DateTime.now();
+    if (now.timeZoneName.contains('/')) {
+      extra['timezone'] = now.timeZoneName;
+    } else {
+      extra['tz_offset_min'] = now.timeZoneOffset.inMinutes;
+    }
+    final toggles =
+        _notifKeys.map((k) => extra[k]).whereType<bool>().toList();
+    await SupabaseService.client.from('settings').upsert({
+      'user_id': SupabaseService.userId,
+      // Déduit des seuls réglages explicites — jamais de valeur par défaut.
+      if (toggles.isNotEmpty) 'notifications_enabled': toggles.any((v) => v),
+      'extra': extra,
+    });
   }
 
   // ---- Correspondances local → serveur -----------------------------------
@@ -322,6 +420,8 @@ class SyncService {
         'notes': r.notes,
         'expected_cadence_days': r.cadenceDays,
         'created_at': r.createdAt.toUtc().toIso8601String(),
+        if (r.archivedAt != null)
+          'archived_at': r.archivedAt!.toUtc().toIso8601String(),
         'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
       };
 
@@ -346,6 +446,9 @@ class SyncService {
         'type': m.type,
         'title': m.title,
         'body': m.body,
+        // Sans created_at explicite, le serveur poserait now() et l'écho
+        // corromprait la chronologie des souvenirs à la restauration.
+        'created_at': m.createdAt.toUtc().toIso8601String(),
         'taken_at': (m.takenAt ?? m.createdAt).toUtc().toIso8601String(),
         'deleted_at': m.deletedAt?.toUtc().toIso8601String(),
       };
@@ -386,6 +489,17 @@ class SyncService {
 
   DateTime? _timeOrNull(Object? v) =>
       v == null ? null : DateTime.parse(v as String);
+
+  // ---- Accès de test ------------------------------------------------------
+
+  /// Charge utile serveur d'un souvenir — exposée pour les tests.
+  @visibleForTesting
+  Map<String, dynamic> debugMapMemory(Memory m, List<MemoryLink> links) =>
+      _mapMemory(m, links);
+
+  /// Rejeu d'une entrée outbox — exposé pour les tests.
+  @visibleForTesting
+  Future<void> debugPushOne(OutboxData op) => _pushOne(op);
 }
 
 /// Identifiant stable d'une ligne de liaison (UUID v5 déterministe) :

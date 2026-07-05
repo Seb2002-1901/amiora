@@ -217,6 +217,7 @@ create table public.relationships (
   category              public.relationship_category not null
                           references public.relationship_categories (code),
   status                public.relationship_status not null default 'active',
+  archived_at           timestamptz,                     -- posé quand la relation quitte le statut actif (miroir local)
   photo_url             text,                            -- chemin Storage de la photo de profil
   birthday              date,                            -- dupliquée en important_dates(type 'birthday') par l'app
   phone                 text,

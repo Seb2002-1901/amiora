@@ -32,7 +32,7 @@ Deno.serve(async (_req) => {
 
   let sent = 0;
   for (const u of users ?? []) {
-    const localHour = hourIn(u.extra?.timezone ?? "Europe/Zurich", nowUtc);
+    const localHour = localHourFor(u.extra, nowUtc);
     if (localHour !== 9) continue; // 9 h locale (hors heures silencieuses par construction)
 
     const candidates = await buildCandidates(db, u.user_id);
@@ -58,6 +58,27 @@ Deno.serve(async (_req) => {
   }
   return json({ ok: true, sent });
 });
+
+// Heure locale de l'utilisateur : identifiant IANA si l'app en a fourni un
+// (contient '/'), sinon décalage en minutes (tz_offset_min, envoyé quand le
+// client ne connaît qu'une abréviation type « CEST »), sinon Europe/Zurich.
+function localHourFor(
+  extra: { timezone?: string; tz_offset_min?: number } | null,
+  at: Date,
+): number {
+  const tz = extra?.timezone;
+  if (typeof tz === "string" && tz.includes("/")) {
+    try {
+      return hourIn(tz, at);
+    } catch {
+      // Identifiant inconnu du runtime : repli ci-dessous.
+    }
+  }
+  if (typeof extra?.tz_offset_min === "number") {
+    return new Date(at.getTime() + extra.tz_offset_min * 60_000).getUTCHours();
+  }
+  return hourIn("Europe/Zurich", at);
+}
 
 function hourIn(timezone: string, at: Date): number {
   return Number(

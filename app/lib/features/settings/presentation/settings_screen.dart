@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
+import '../../../data/remote/supabase_service.dart';
+import '../../../data/sync/sync_service.dart';
 
 /// Paramètres — persistés dans la base locale (table AppSettings).
 /// Les toggles notifications pilotent le futur moteur (Phase 4) ;
@@ -143,6 +145,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmWipe(BuildContext context, WidgetRef ref) async {
+    const connected = SupabaseService.isConfigured;
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
       builder: (sheetContext) => Padding(
@@ -157,8 +160,14 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AmioraSpacing.x2),
             Text(
-              'Relations, interactions, souvenirs et promesses seront '
-              'supprimés de cet appareil. Cette action est irréversible.',
+              connected
+                  ? 'Relations, interactions, souvenirs et promesses seront '
+                      'supprimés de cet appareil. Les données sauvegardées '
+                      'se re-synchroniseront depuis le serveur à la '
+                      'prochaine connexion.'
+                  : 'Relations, interactions, souvenirs et promesses seront '
+                      'supprimés de cet appareil. Cette action est '
+                      'irréversible.',
               style: Theme.of(sheetContext)
                   .textTheme
                   .bodyMedium!
@@ -180,18 +189,95 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
-    if (confirmed ?? false) {
-      final db = ref.read(databaseProvider);
+    if (!(confirmed ?? false)) return;
+
+    final db = ref.read(databaseProvider);
+    if (connected) {
+      // Garde-fou : jamais d'effacement tant que des mutations locales
+      // n'ont pas été poussées vers le serveur.
+      var pending = await db.select(db.outbox).get();
+      while (pending.isNotEmpty) {
+        await ref.read(syncServiceProvider).synchronize();
+        pending = await db.select(db.outbox).get();
+        if (pending.isEmpty) break;
+        if (!context.mounted) return;
+        final retry = await _askRetrySync(context);
+        if (retry != true) return;
+      }
+    } else {
+      // Mode local pur : ces données n'existent nulle part ailleurs —
+      // confirmation distincte exigée.
+      if (!context.mounted) return;
+      final sure = await _confirmLocalOnlyWipe(context);
+      if (sure != true) return;
+    }
+
+    // Effacement atomique : tout ou rien.
+    await db.transaction(() async {
       for (final table in db.allTables) {
         await db.delete(table).go();
       }
-      ref.read(dbTickProvider.notifier).state++;
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Données locales effacées.')),
-        );
-      }
+    });
+    ref.read(dbTickProvider.notifier).state++;
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Données locales effacées.')),
+      );
     }
+  }
+
+  /// Des mutations locales n'ont pas pu être poussées : l'effacement est
+  /// refusé tant qu'elles ne sont pas sauvegardées sur le serveur.
+  Future<bool?> _askRetrySync(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Synchronisation incomplète'),
+        content: const Text(
+          'Des modifications ne sont pas encore sauvegardées sur le '
+          'serveur. Effacer maintenant les perdrait définitivement. '
+          'Réessayer la synchronisation ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Réessayer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// En mode local (aucun backend), les données n'ont jamais été
+  /// synchronisées : avertissement explicite avant perte définitive.
+  Future<bool?> _confirmLocalOnlyWipe(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Aucune sauvegarde serveur'),
+        content: const Text(
+          "Cet appareil fonctionne sans compte : ces données n'ont jamais "
+          'été synchronisées et seront perdues définitivement.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: AmioraColors.errorText,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Effacer quand même'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

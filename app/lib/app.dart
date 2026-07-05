@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/logging/logger.dart';
 import 'core/router/router.dart';
 import 'core/theme/theme.dart';
 import 'data/app_providers.dart';
@@ -22,6 +24,9 @@ class _AmioraAppState extends ConsumerState<AmioraApp> {
   Timer? _debounce;
   Timer? _periodic;
 
+  /// Dernier compte connecté sur cet appareil (table settings locale).
+  static const _lastUserKey = 'last_user_id';
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +43,27 @@ class _AmioraAppState extends ConsumerState<AmioraApp> {
     super.dispose();
   }
 
+  /// À la connexion : si l'appareil porte les données d'un AUTRE compte,
+  /// la base locale est vidée (outbox comprise) AVANT toute synchronisation
+  /// — jamais de fusion entre utilisateurs. Première connexion : les données
+  /// locales appartiennent à ce compte et seront poussées vers lui.
+  Future<void> _onSignedIn(String userId) async {
+    final db = ref.read(databaseProvider);
+    final lastRaw = await db.settingValue(_lastUserKey);
+    final lastUserId = lastRaw == null ? null : jsonDecode(lastRaw) as String;
+    if (lastUserId != null && lastUserId != userId) {
+      Log.info('sync_local_wipe_user_changed');
+      await db.transaction(() async {
+        for (final table in db.allTables) {
+          await db.delete(table).go();
+        }
+      });
+      ref.read(dbTickProvider.notifier).state++;
+    }
+    await db.setSetting(_lastUserKey, jsonEncode(userId));
+    await ref.read(syncServiceProvider).synchronize();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Chaque mutation locale déclenche une poussée débouncée.
@@ -52,7 +78,7 @@ class _AmioraAppState extends ConsumerState<AmioraApp> {
       final session = next.valueOrNull;
       if (session != null) {
         SubscriptionService.logIn(session.user.id);
-        ref.read(syncServiceProvider).synchronize();
+        _onSignedIn(session.user.id);
       }
     });
     return MaterialApp.router(
