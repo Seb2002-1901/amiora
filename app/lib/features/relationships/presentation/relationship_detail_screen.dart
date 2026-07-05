@@ -7,6 +7,7 @@ import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
 import '../../../domain/presence/presence_bands.dart';
 import '../../../domain/presence/presence_score.dart';
+import '../../common/access.dart';
 import '../../common/presence_ui.dart';
 import '../../interactions/presentation/add_interaction_sheet.dart';
 
@@ -18,6 +19,7 @@ class RelationshipDetailScreen extends ConsumerWidget {
   /// Cycle de vie d'une relation : l'archivage est proposé avant toute
   /// suppression (maquette état F) ; « En mémoire » gèle score et rappels.
   Future<void> _showLifecycleSheet(BuildContext context, WidgetRef ref) async {
+    if (!ensureWritable(context, ref)) return;
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -182,8 +184,10 @@ class RelationshipDetailScreen extends ConsumerWidget {
               FilledButton.icon(
                 icon: const Icon(Icons.add),
                 label: const Text('Enregistrer une interaction'),
-                onPressed: () =>
-                    AddInteractionSheet.show(context, preselectedId: id),
+                onPressed: () {
+                  if (!ensureWritable(context, ref)) return;
+                  AddInteractionSheet.show(context, preselectedId: id);
+                },
               ),
               const SizedBox(height: AmioraSpacing.x5),
               Text(

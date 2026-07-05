@@ -86,10 +86,13 @@ class _AddInteractionSheetState extends ConsumerState<AddInteractionSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final rels = ref.watch(relationshipsProvider).valueOrNull ?? const [];
+    final relsAsync = ref.watch(relationshipsProvider);
+    final rels = relsAsync.valueOrNull ?? const <Relationship>[];
     final canSave = _selected.isNotEmpty && _type != null && !_saving;
 
-    return Padding(
+    // Défilement : la feuille ne déborde jamais (clavier ouvert,
+    // grandes tailles de texte).
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: AmioraSpacing.x4,
         right: AmioraSpacing.x4,
@@ -107,7 +110,14 @@ class _AddInteractionSheetState extends ConsumerState<AddInteractionSheet> {
                 theme.textTheme.bodyMedium!.copyWith(color: AmioraColors.text2),
           ),
           const SizedBox(height: AmioraSpacing.x4),
-          if (rels.isEmpty)
+          // Le message « Ajoute d'abord une personne » est réservé à une
+          // liste réellement vide : pendant le chargement, indicateur.
+          if (relsAsync.isLoading && rels.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: AmioraSpacing.x4),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (rels.isEmpty)
             Text(
               "Ajoute d'abord une personne à ton cercle.",
               style: theme.textTheme.bodyMedium!

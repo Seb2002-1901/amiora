@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/layout/breakpoints.dart';
+import '../../../core/navigation/tap_guard.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
 import '../../../domain/presence/presence_bands.dart';
 import '../../../domain/presence/presence_score.dart';
+import '../../common/access.dart';
 import '../../common/presence_ui.dart';
 import '../../common/relationship_card.dart';
 
@@ -111,11 +113,11 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   const _EmptyState();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: context.gutter * 2),
@@ -144,7 +146,11 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AmioraSpacing.x6),
             FilledButton.icon(
-              onPressed: () => context.push('/relationships/add'),
+              onPressed: () {
+                if (!TapGuard.allow()) return;
+                if (!ensureWritable(context, ref)) return;
+                context.push('/relationships/add');
+              },
               icon: const Icon(Icons.add),
               label: const Text('Ajouter une personne'),
             ),

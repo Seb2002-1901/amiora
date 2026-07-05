@@ -3,18 +3,68 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/layout/breakpoints.dart';
+import '../../../core/navigation/tap_guard.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
+import '../../../data/remote/auth_repository.dart';
+import '../../../data/remote/supabase_service.dart';
+import '../../../data/subscription/subscription_service.dart';
 import '../../common/presence_ui.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
+
+  /// Déconnexion réelle : confirmation, puis signOut — le routeur
+  /// (refreshListenable) ramène vers /login quand la session tombe.
+  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Se déconnecter ?'),
+        content: const Text(
+          'Tes données restent sur cet appareil et sur le serveur.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Se déconnecter'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+    } on Exception {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('La déconnexion a échoué. Réessaie dans un instant.'),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final relCount =
         ref.watch(relationshipsProvider).valueOrNull?.length ?? 0;
     final inMemoriam = ref.watch(inMemoriamProvider).valueOrNull ?? const [];
+    final session = ref.watch(sessionProvider).valueOrNull;
+    // Statut d'accès réel : bêta sans RevenueCat, sinon état du droit.
+    final readOnly = SubscriptionService.isConfigured &&
+        ref.watch(accessStateProvider).valueOrNull == AccessState.readOnly;
+    final accessLabel = !SubscriptionService.isConfigured
+        ? 'Accès complet (bêta)'
+        : readOnly
+            ? 'Lecture seule'
+            : 'Abonnement actif';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
@@ -42,13 +92,16 @@ class ProfileScreen extends ConsumerWidget {
                       .copyWith(color: AmioraColors.text2),
                 ),
                 const SizedBox(height: AmioraSpacing.x3),
-                // Statut d'abonnement réel branché avec RevenueCat (Phase 5).
-                ActionChip(
-                  label: const Text('Essai — abonnement en Phase 5'),
+                Chip(
+                  label: Text(accessLabel),
                   side: const BorderSide(color: AmioraColors.gold),
                   labelStyle: const TextStyle(color: AmioraColors.gold),
-                  onPressed: () => context.push('/paywall'),
                 ),
+                if (readOnly)
+                  TextButton(
+                    onPressed: () => context.push('/paywall'),
+                    child: const Text('Réactiver AMIORA'),
+                  ),
               ],
             ),
           ),
@@ -80,19 +133,16 @@ class ProfileScreen extends ConsumerWidget {
             onTap: () => context.push('/profile/settings'),
           ),
           const SizedBox(height: AmioraSpacing.x5),
-          Center(
-            child: TextButton(
-              style: TextButton.styleFrom(foregroundColor: AmioraColors.text3),
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'La connexion au compte arrive avec l’authentification (Phase 2).',
-                  ),
-                ),
+          // Visible seulement en mode connecté avec une session ouverte.
+          if (SupabaseService.isConfigured && session != null)
+            Center(
+              child: TextButton(
+                style:
+                    TextButton.styleFrom(foregroundColor: AmioraColors.text3),
+                onPressed: () => _signOut(context, ref),
+                child: const Text('Se déconnecter'),
               ),
-              child: const Text('Se déconnecter'),
             ),
-          ),
         ],
       ),
     );
@@ -135,7 +185,9 @@ class _NavCard extends StatelessWidget {
               const Icon(Icons.chevron_right, color: AmioraColors.text3),
             ],
           ),
-          onTap: onTap,
+          onTap: () {
+            if (TapGuard.allow()) onTap();
+          },
         ),
       ),
     );

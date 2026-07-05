@@ -8,6 +8,7 @@ import 'package:amiora/core/layout/breakpoints.dart';
 import 'package:amiora/core/theme/theme.dart';
 import 'package:amiora/data/app_providers.dart';
 import 'package:amiora/data/local/database.dart';
+import 'package:amiora/data/subscription/subscription_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,6 +41,56 @@ void main() {
       find.text('Commence par ajouter une personne qui compte pour toi'),
       findsOneWidget,
     );
+  });
+
+  testWidgets(
+      'Lecture seule : le CTA de l’accueil est gardé par ensureWritable',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          relationshipsProvider.overrideWith(
+            (ref) => Stream.value(const <Relationship>[]),
+          ),
+          scoresProvider.overrideWith((ref) async => const {}),
+          accessStateProvider.overrideWith(
+            (ref) => Stream.value(AccessState.readOnly),
+          ),
+        ],
+        child: const AmioraApp(),
+      ),
+    );
+    // Redirection différée du splash vers l'accueil.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // L'état d'accès est chargé (comme au démarrage réel) avant le tap :
+    // le garde lit sa valeur, pas un état de chargement.
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AmioraApp)),
+      listen: false,
+    );
+    await container.read(accessStateProvider.future);
+
+    // Tap sur le CTA : le garde d'écriture bloque, pas d'écran d'ajout.
+    await tester.tap(find.text('Ajouter une personne'));
+    await tester.pump();
+    expect(find.text('Ajouter une relation'), findsNothing);
+    // Comportement d'ensureWritable : snackbar douce + action « Réactiver »
+    // (rendue par chaque Scaffold imbriqué, d'où findsWidgets).
+    expect(
+      find.text(
+        'Ton abonnement a expiré — tes souvenirs restent à toi. '
+        'Réactive AMIORA pour continuer à créer.',
+      ),
+      findsWidgets,
+    );
+
+    // L'action « Réactiver » mène au paywall.
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Réactiver').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Continue de prendre soin'), findsOneWidget);
   });
 
   testWidgets('La coquille adaptative passe les 6 gabarits sans débordement',

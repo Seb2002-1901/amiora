@@ -28,9 +28,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
+  /// Validation raisonnable d'une adresse : partie locale, @, domaine, point.
+  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
   bool get _valid =>
       _accepted &&
-      _email.text.contains('@') &&
+      _emailPattern.hasMatch(_email.text.trim()) &&
       _password.text.length >= 10 &&
       !_busy;
 

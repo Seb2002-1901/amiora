@@ -28,11 +28,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  /// Enchaîne une action d'authentification : verrouille l'interface et
+  /// affiche les erreurs avec douceur. Aucune navigation ici : le routeur
+  /// (refreshListenable) redirige de lui-même quand la session arrive —
+  /// le retour de signInWithOAuth signifie seulement « navigateur ouvert ».
+  Future<void> _run(
+    Future<void> Function() action, {
+    String? successMessage,
+  }) async {
     setState(() => _busy = true);
     try {
       await action();
-      if (mounted) context.go('/home');
+      if (mounted && successMessage != null) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(successMessage)));
+      }
     } on AppException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -105,6 +115,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         : () => _run(
                               () => auth
                                   .signInWithProvider(OAuthProvider.apple),
+                              successMessage:
+                                  'Connexion en cours dans le navigateur…',
                             ),
                   ),
                   const SizedBox(height: AmioraSpacing.x3),
@@ -116,6 +128,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         : () => _run(
                               () => auth
                                   .signInWithProvider(OAuthProvider.google),
+                              successMessage:
+                                  'Connexion en cours dans le navigateur…',
                             ),
                   ),
                   const SizedBox(height: AmioraSpacing.x4),
@@ -141,6 +155,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
                     decoration: const InputDecoration(labelText: 'E-mail'),
+                    // Rebuild à chaque frappe : active « Mot de passe
+                    // oublié ? » dès que l'adresse est saisie.
+                    onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AmioraSpacing.x3),
                   TextField(
@@ -172,18 +189,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: TextButton(
                       onPressed: _busy || _email.text.trim().isEmpty
                           ? null
-                          : () async {
-                              await auth.sendPasswordReset(_email.text.trim());
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'E-mail de réinitialisation envoyé.',
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
+                          : () => _run(
+                                () =>
+                                    auth.sendPasswordReset(_email.text.trim()),
+                                successMessage:
+                                    'E-mail de réinitialisation envoyé.',
+                              ),
                       child: const Text('Mot de passe oublié ?'),
                     ),
                   ),

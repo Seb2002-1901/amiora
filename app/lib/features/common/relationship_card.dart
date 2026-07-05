@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/tap_guard.dart';
 import '../../core/theme/tokens.dart';
 import '../../data/local/database.dart';
 import '../../domain/presence/presence_bands.dart';
@@ -25,7 +26,10 @@ class RelationshipCard extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(AmioraRadii.card),
-        onTap: () => context.push('/relationships/${relationship.id}'),
+        onTap: () {
+          if (!TapGuard.allow()) return;
+          context.push('/relationships/${relationship.id}');
+        },
         child: Padding(
           padding: const EdgeInsets.all(AmioraSpacing.x4),
           child: Row(

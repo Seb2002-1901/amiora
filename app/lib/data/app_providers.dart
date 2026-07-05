@@ -33,14 +33,15 @@ final scoresProvider = FutureProvider<Map<String, PresenceResult>>((ref) async {
 });
 
 /// Interactions d'une relation (plus récentes d'abord).
+/// autoDispose : pas de rétention par identifiant visité.
 final interactionsProvider =
-    FutureProvider.family<List<Interaction>, String>((ref, relId) {
+    FutureProvider.autoDispose.family<List<Interaction>, String>((ref, relId) {
   ref.watch(dbTickProvider);
   return ref.watch(databaseProvider).interactionsForRelationship(relId);
 });
 
 final relationshipProvider =
-    FutureProvider.family<Relationship?, String>((ref, id) {
+    FutureProvider.autoDispose.family<Relationship?, String>((ref, id) {
   ref.watch(dbTickProvider);
   return ref.watch(databaseProvider).relationshipById(id);
 });
@@ -73,8 +74,9 @@ final yearStatsProvider =
 });
 
 /// Réglage booléen persisté (notifications, biométrie, analytics…).
+/// autoDispose : pas de rétention par clé visitée.
 final boolSettingProvider =
-    FutureProvider.family<bool, (String, bool)>((ref, arg) async {
+    FutureProvider.autoDispose.family<bool, (String, bool)>((ref, arg) async {
   ref.watch(dbTickProvider);
   final (key, defaultValue) = arg;
   final raw = await ref.watch(databaseProvider).settingValue(key);

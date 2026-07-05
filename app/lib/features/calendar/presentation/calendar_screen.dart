@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
+import '../../../data/local/database.dart';
 import '../../common/presence_ui.dart';
 
 /// Calendrier : agrège les vraies données — anniversaires (récurrents),
@@ -27,9 +28,48 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rels = ref.watch(relationshipsProvider).valueOrNull ?? const [];
-    final promises = ref.watch(promisesProvider).valueOrNull ?? const [];
+    final rels = ref.watch(relationshipsProvider);
+    final promises = ref.watch(promisesProvider);
 
+    return Scaffold(
+      appBar: AppBar(title: const Text('Calendrier')),
+      // Une erreur de la base ne doit jamais passer pour « rien de prévu » :
+      // chargement et erreur ont leurs propres états, comme ailleurs.
+      body: switch ((rels, promises)) {
+        (AsyncError(), _) || (_, AsyncError()) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Quelque chose n'a pas fonctionné",
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AmioraSpacing.x4),
+                OutlinedButton(
+                  onPressed: () => ref
+                    ..invalidate(relationshipsProvider)
+                    ..invalidate(promisesProvider),
+                  child: const Text('Réessayer'),
+                ),
+              ],
+            ),
+          ),
+        (
+          AsyncData(value: final relList),
+          AsyncData(value: final promiseList)
+        ) =>
+          _body(context, relList, promiseList),
+        _ => const Center(child: CircularProgressIndicator()),
+      },
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    List<Relationship> rels,
+    List<Promise> promises,
+  ) {
     // Repères du mois affiché : anniversaires + promesses datées.
     final markers = <DateTime, List<(IconData, String)>>{};
     void mark(DateTime day, IconData icon, String label) {
@@ -63,104 +103,101 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final upcoming = markers.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Calendrier')),
-      body: ListView(
-        padding: EdgeInsets.symmetric(
-          horizontal: context.gutter,
-          vertical: AmioraSpacing.x2,
+    return ListView(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.gutter,
+        vertical: AmioraSpacing.x2,
+      ),
+      children: [
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () => setState(
+                () => _month = DateTime(_month.year, _month.month - 1),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                _monthTitle(_month),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: () => setState(
+                () => _month = DateTime(_month.year, _month.month + 1),
+              ),
+            ),
+          ],
         ),
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: () => setState(
-                  () => _month = DateTime(_month.year, _month.month - 1),
-                ),
-              ),
-              Expanded(
+        const SizedBox(height: AmioraSpacing.x2),
+        // Grille du mois — fluide, jamais de largeur codée en dur.
+        GridView.count(
+          crossAxisCount: 7,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            for (final d in const ['L', 'M', 'M', 'J', 'V', 'S', 'D'])
+              Center(
                 child: Text(
-                  _monthTitle(_month),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: () => setState(
-                  () => _month = DateTime(_month.year, _month.month + 1),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AmioraSpacing.x2),
-          // Grille du mois — fluide, jamais de largeur codée en dur.
-          GridView.count(
-            crossAxisCount: 7,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              for (final d in const ['L', 'M', 'M', 'J', 'V', 'S', 'D'])
-                Center(
-                  child: Text(
-                    d,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall!
-                        .copyWith(color: AmioraColors.text3),
-                  ),
-                ),
-              for (var i = 1; i < firstWeekday; i++) const SizedBox.shrink(),
-              for (var day = 1; day <= daysInMonth; day++)
-                _DayCell(
-                  day: day,
-                  isToday: today.year == _month.year &&
-                      today.month == _month.month &&
-                      today.day == day,
-                  hasMarker: markers
-                      .containsKey(DateTime(_month.year, _month.month, day)),
-                ),
-            ],
-          ),
-          const SizedBox(height: AmioraSpacing.x4),
-          if (upcoming.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: AmioraSpacing.x6),
-              child: Center(
-                child: Text(
-                  'Rien de prévu ce mois-ci.\nLes anniversaires et promesses apparaîtront ici.',
-                  textAlign: TextAlign.center,
+                  d,
                   style: Theme.of(context)
                       .textTheme
-                      .bodyMedium!
-                      .copyWith(color: AmioraColors.text2),
+                      .bodySmall!
+                      .copyWith(color: AmioraColors.text3),
                 ),
               ),
-            ),
-          for (final entry in upcoming) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AmioraSpacing.x2),
+            for (var i = 1; i < firstWeekday; i++) const SizedBox.shrink(),
+            for (var day = 1; day <= daysInMonth; day++)
+              _DayCell(
+                day: day,
+                isToday: today.year == _month.year &&
+                    today.month == _month.month &&
+                    today.day == day,
+                hasMarker: markers
+                    .containsKey(DateTime(_month.year, _month.month, day)),
+              ),
+          ],
+        ),
+        const SizedBox(height: AmioraSpacing.x4),
+        if (upcoming.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: AmioraSpacing.x6),
+            child: Center(
               child: Text(
-                frenchDate(entry.key).toUpperCase(),
-                style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: AmioraColors.text3,
-                      letterSpacing: 1,
-                    ),
+                'Rien de prévu ce mois-ci.\nLes anniversaires et promesses apparaîtront ici.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(color: AmioraColors.text2),
               ),
             ),
-            for (final (icon, label) in entry.value) ...[
-              Card(
-                child: ListTile(
-                  leading: Icon(icon, color: AmioraColors.gold),
-                  title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
+          ),
+        for (final entry in upcoming) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AmioraSpacing.x2),
+            child: Text(
+              frenchDate(entry.key).toUpperCase(),
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    color: AmioraColors.text3,
+                    letterSpacing: 1,
+                  ),
+            ),
+          ),
+          for (final (icon, label) in entry.value) ...[
+            Card(
+              child: ListTile(
+                leading: Icon(icon, color: AmioraColors.gold),
+                title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              const SizedBox(height: AmioraSpacing.x2),
-            ],
+            ),
+            const SizedBox(height: AmioraSpacing.x2),
           ],
         ],
-      ),
+      ],
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
+import '../../common/access.dart';
 import '../../common/presence_ui.dart';
 
 /// « En mémoire » (PRD V1.2, décision 9 V1.1) : conserve l'histoire d'une
@@ -185,6 +186,7 @@ class _MemorialView extends ConsumerWidget {
                     foregroundColor: AmioraColors.text3,
                   ),
                   onPressed: () async {
+                    if (!ensureWritable(context, ref)) return;
                     await ref
                         .read(databaseProvider)
                         .setRelationshipStatus(relationshipId, 'active');

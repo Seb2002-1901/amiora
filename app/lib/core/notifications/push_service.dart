@@ -1,3 +1,4 @@
+import 'dart:async' show StreamSubscription;
 import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';
@@ -25,6 +26,9 @@ abstract final class PushService {
 
   static bool _initialized = false;
 
+  /// Abonnement unique au renouvellement de jeton : jamais empilé.
+  static StreamSubscription<String>? _tokenRefreshSub;
+
   static Future<void> initIfConfigured() async {
     if (!isConfigured || _initialized) return;
     await Firebase.initializeApp();
@@ -46,7 +50,14 @@ abstract final class PushService {
     Log.info('push_permission granted=$granted');
     if (!granted) return false;
     await _registerToken();
-    FirebaseMessaging.instance.onTokenRefresh.listen((_) => _registerToken());
+    _tokenRefreshSub ??=
+        FirebaseMessaging.instance.onTokenRefresh.listen((_) async {
+      try {
+        await _registerToken();
+      } on Exception catch (e) {
+        Log.warning('push_token_refresh_failed error=$e');
+      }
+    });
     return true;
   }
 

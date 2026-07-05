@@ -7,6 +7,7 @@ import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
 import '../../../data/local/database.dart';
+import '../../common/access.dart';
 import '../../common/presence_ui.dart';
 
 class MemoriesScreen extends ConsumerStatefulWidget {
@@ -30,7 +31,10 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Ajouter un souvenir',
-            onPressed: () => AddMemorySheet.show(context),
+            onPressed: () {
+              if (!ensureWritable(context, ref)) return;
+              AddMemorySheet.show(context);
+            },
           ),
         ],
       ),
@@ -90,7 +94,10 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
                       const SizedBox(height: AmioraSpacing.x5),
                       if (all.isEmpty)
                         FilledButton.icon(
-                          onPressed: () => AddMemorySheet.show(context),
+                          onPressed: () {
+                            if (!ensureWritable(context, ref)) return;
+                            AddMemorySheet.show(context);
+                          },
                           icon: const Icon(Icons.add),
                           label: const Text('Ajouter un souvenir'),
                         ),
@@ -264,7 +271,9 @@ class _AddMemorySheetState extends ConsumerState<AddMemorySheet> {
     final canSave =
         _body.text.trim().isNotEmpty && _selected.isNotEmpty && !_saving;
 
-    return Padding(
+    // Défilement : la feuille ne déborde jamais (clavier ouvert,
+    // grandes tailles de texte).
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: AmioraSpacing.x4,
         right: AmioraSpacing.x4,
@@ -278,17 +287,23 @@ class _AddMemorySheetState extends ConsumerState<AddMemorySheet> {
           const SizedBox(height: AmioraSpacing.x4),
           TextField(
             controller: _title,
+            maxLength: 120,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(labelText: 'Titre (facultatif)'),
+            decoration: const InputDecoration(
+              labelText: 'Titre (facultatif)',
+              counterText: '',
+            ),
           ),
           const SizedBox(height: AmioraSpacing.x3),
           TextField(
             controller: _body,
             maxLines: 3,
+            maxLength: 2000,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
               labelText: 'Que veux-tu retenir ?',
               hintText: '« Papa m’a raconté son enfance… »',
+              counterText: '',
             ),
             onChanged: (_) => setState(() {}),
           ),

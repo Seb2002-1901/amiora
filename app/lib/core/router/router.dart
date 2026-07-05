@@ -24,6 +24,9 @@ import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/statistics/presentation/statistics_screen.dart';
 import '../layout/adaptive_scaffold.dart';
+import '../layout/breakpoints.dart';
+import '../navigation/tap_guard.dart';
+import '../theme/tokens.dart';
 
 /// Table des routes (PRD V1.2 — 17 écrans).
 /// Quatre branches persistantes + « + » central modal.
@@ -43,7 +46,13 @@ final GoRouter appRouter = GoRouter(
     }
     return null;
   },
+  // Deep link inconnu (dont ch.amiora.app://login-callback reçu app
+  // ouverte) : écran doux aux couleurs du thème, jamais l'erreur anglaise
+  // de go_router.
+  errorBuilder: (_, __) => const _NotFoundScreen(),
   routes: [
+    // Racine (deep link « / ») : renvoie vers l'accueil.
+    GoRoute(path: '/', redirect: (_, __) => '/home'),
     GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
     GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
@@ -124,6 +133,53 @@ class _AuthRefresh extends ChangeNotifier {
   }
 }
 
+/// Écran « Page introuvable » : sortie douce pour toute route inconnue.
+class _NotFoundScreen extends StatelessWidget {
+  const _NotFoundScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: context.gutter * 2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.explore_off_outlined,
+                size: 64,
+                color: AmioraColors.gold,
+              ),
+              const SizedBox(height: AmioraSpacing.x5),
+              Text(
+                'Page introuvable',
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AmioraSpacing.x2),
+              Text(
+                'Ce lien ne mène nulle part — tes relations, elles, '
+                'sont toujours là.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(color: AmioraColors.text2),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AmioraSpacing.x6),
+              FilledButton(
+                onPressed: () => context.go('/home'),
+                child: const Text("Retour à l'accueil"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AppShell extends ConsumerWidget {
   const _AppShell({required this.shell});
 
@@ -163,6 +219,7 @@ class _AppShell extends ConsumerWidget {
         initialLocation: index == shell.currentIndex,
       ),
       onCreatePressed: () {
+        if (!TapGuard.allow()) return;
         if (ensureWritable(context, ref)) AddInteractionSheet.show(context);
       },
     );

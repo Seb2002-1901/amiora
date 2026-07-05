@@ -7,6 +7,7 @@ import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
 import '../../../data/local/database.dart';
+import '../../common/access.dart';
 import '../../common/presence_ui.dart';
 
 class PromisesScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,10 @@ class _PromisesScreenState extends ConsumerState<PromisesScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Nouvelle promesse',
-            onPressed: () => AddPromiseSheet.show(context),
+            onPressed: () {
+              if (!ensureWritable(context, ref)) return;
+              AddPromiseSheet.show(context);
+            },
           ),
         ],
       ),
@@ -133,7 +137,10 @@ class _PromiseCard extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
               ),
-              onChanged: (v) => setStatus(v! ? 'done' : 'todo'),
+              onChanged: (v) {
+                if (!ensureWritable(context, ref)) return;
+                setStatus(v! ? 'done' : 'todo');
+              },
             ),
             Expanded(
               child: Column(
@@ -165,11 +172,13 @@ class _PromiseCard extends ConsumerWidget {
               icon: const Icon(Icons.more_vert, color: AmioraColors.text3),
               onSelected: (action) async {
                 if (action == 'delete') {
+                  // Supprimer reste libre en lecture seule (PRD V1.2).
                   await ref
                       .read(databaseProvider)
                       .softDeletePromise(promise.id);
                   ref.read(dbTickProvider.notifier).state++;
                 } else {
+                  if (!ensureWritable(context, ref)) return;
                   await setStatus(action);
                 }
               },
@@ -254,7 +263,9 @@ class _AddPromiseSheetState extends ConsumerState<AddPromiseSheet> {
     final canSave =
         _title.text.trim().isNotEmpty && _relationshipId != null && !_saving;
 
-    return Padding(
+    // Défilement : la feuille ne déborde jamais (clavier ouvert,
+    // grandes tailles de texte).
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: AmioraSpacing.x4,
         right: AmioraSpacing.x4,
@@ -269,10 +280,12 @@ class _AddPromiseSheetState extends ConsumerState<AddPromiseSheet> {
           TextField(
             controller: _title,
             autofocus: true,
+            maxLength: 120,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
               labelText: 'Promesse',
               hintText: '« Aller voir Grand-maman dimanche »',
+              counterText: '',
             ),
             onChanged: (_) => setState(() {}),
           ),

@@ -6,6 +6,7 @@ import '../../../core/layout/breakpoints.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../data/app_providers.dart';
 import '../../../domain/presence/presence_score.dart';
+import '../../common/access.dart';
 import '../../common/relationship_card.dart';
 
 class RelationshipsScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,10 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
           IconButton(
             icon: const Icon(Icons.person_add_alt_outlined),
             tooltip: 'Ajouter une relation',
-            onPressed: () => context.push('/relationships/add'),
+            onPressed: () {
+              if (!ensureWritable(context, ref)) return;
+              context.push('/relationships/add');
+            },
           ),
         ],
       ),
