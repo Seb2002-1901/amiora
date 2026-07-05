@@ -33,9 +33,14 @@ migrate_working_dir/
 
 # Le fichier pubspec.lock est volontairement versionné (application, pas package).
 
-# Android : non versionné, régénéré en CI via
-# `flutter create --platforms android .` (voir .github/workflows/ci.yml).
-/android/
+# Android : projet VERSIONNÉ (permission INTERNET en release, intent-filter
+# OAuth, label AMIORA, icônes, lancement sombre) — seuls les fichiers locaux
+# et générés sont ignorés.
+/android/.gradle/
+/android/local.properties
+/android/**/build/
+/android/*.iml
+/android/.kotlin/
 
 # iOS : projet Xcode VERSIONNÉ (identifiant, schéma OAuth, réglages
 # TestFlight) — seuls les fichiers générés à chaque build sont ignorés.

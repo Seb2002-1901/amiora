@@ -56,8 +56,8 @@ jobs:
         run: sed -i '/^# Environnement CI derrière proxy/,$d' pubspec.yaml
       - run: flutter pub get
       - run: dart run build_runner build --delete-conflicting-outputs
-      - name: Générer le dossier Android (non versionné)
-        run: flutter create --platforms android --project-name amiora --org ch.amiora .
+      # Le projet Android (app/android) est versionné : permission INTERNET
+      # en release, intent-filter OAuth, label, icônes, lancement sombre.
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
