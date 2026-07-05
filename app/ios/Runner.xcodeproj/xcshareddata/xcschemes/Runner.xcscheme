@@ -69,8 +69,13 @@
          </TestableReference>
       </Testables>
    </TestAction>
+   <!-- Release par défaut au lancement Xcode : depuis iOS 14, une app
+        Flutter en Debug lancée hors outillage (icône de l'écran d'accueil)
+        affiche l'écran « In iOS 14+ debug mode Flutter apps can only be
+        launched… ». En Release, ▶ installe une app autonome. Le mode
+        debug reste accessible via `flutter run` uniquement. -->
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       customLLDBInitFile = "$(SRCROOT)/Flutter/ephemeral/flutter_lldbinit"

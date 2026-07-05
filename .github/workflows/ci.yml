@@ -86,4 +86,6 @@ jobs:
       - run: dart run build_runner build --delete-conflicting-outputs
       # Le projet Xcode (app/ios) est versionné : identifiant ch.amiora.amiora,
       # schéma d'URL OAuth, déclaration de chiffrement pour TestFlight.
-      - run: flutter build ios --no-codesign --debug
+      # Profile (AOT) : le mode pertinent sur appareil réel — depuis iOS 14,
+      # une app Flutter Debug ne se lance pas depuis l'écran d'accueil.
+      - run: flutter build ios --no-codesign --profile
